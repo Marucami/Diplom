@@ -1,0 +1,5 @@
+venv/
+launcher.spec/
+launcher.py/
+PostgreSQL/
+Redis/
