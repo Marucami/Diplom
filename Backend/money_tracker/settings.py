@@ -44,9 +44,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'drf_spectacular',
-    'jwt_auth',
-    'django_celery_beat',
-    'django_celery_results',
     'api',
 ]
 
@@ -57,7 +54,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware', #встроенная аушка
-    'jwt_auth.middleware.JWTAuthenticationMiddleware',  #аушка с ЖВТшкой
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -89,12 +86,8 @@ WSGI_APPLICATION = 'money_tracker.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'money_db',
-        'USER': 'Marucami',
-        'PASSWORD': '1337',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -143,38 +136,10 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 REST_FRAMEWORK = {
-  #'DEFAULT_AUTHENTICATION_CLASSES': (
-   #    'jwt_auth.authentication.JSONWebTokenAuthentication',
-   #),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_FILTER_BACKENDS': (
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
-    ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
 }
-
-#ЖВТшка - для авторизации (webstack-django-jwt-auth)
-from datetime import timedelta
-
-JWT_AUTH = {
-    'JWT_EXPIRATION_DELTA': timedelta(days=1),
-    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=7),
-}
-
-# настройки сельдерея(нужен для обработки регулярных собитый - запланированные платежи и тд. идёт в связке с редиской - нужна для уведомлений)
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # этот малый нужен для автоматической генерации докуменкации для API
 # а дальше подключаются Swagger UI вместе с ReDoc и генерят инерактивные странички в браузере.

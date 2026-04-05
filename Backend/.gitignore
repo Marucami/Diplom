@@ -1,5 +1,6 @@
 venv/
-launcher.spec/
-launcher.py/
-PostgreSQL/
-Redis/
+*.zip
+*.rar
+__pycache__/
+build/
+dist/
