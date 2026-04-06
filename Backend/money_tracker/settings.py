@@ -151,14 +151,3 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
-
-# этот малый нужен для автоматической генерации докуменкации для API
-# а дальше подключаются Swagger UI вместе с ReDoc и генерят инерактивные странички в браузере.
-# можно сразу в браузере отправлять запросы к API и смотреть ответы. Для тестов мастхев
-
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Money Tracker API',
-    'DESCRIPTION': 'API for personal finance tracking',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-}
