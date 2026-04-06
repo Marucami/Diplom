@@ -1,4 +1,7 @@
+from api.models import Account
+from api.serializers import AccountSerializer
 from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
@@ -13,6 +16,7 @@ from api.services.analytics_service import AnalyticsService
 # ---------------- AUTH ----------------
 
 class RegisterView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
@@ -28,6 +32,7 @@ class RegisterView(APIView):
 
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         user = authenticate(
             username=request.data.get("username"),
@@ -46,11 +51,26 @@ class LogoutView(APIView):
         return Response({"message": "Logged out"})
 
 
+# ---------------- Account ----------------
+
+class AccountView(APIView):
+    def get(self, request):
+        accounts = Account.objects.filter(owner=request.user)
+        serializer = AccountSerializer(accounts, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = AccountSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(owner=request.user)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
 # ---------------- TRANSACTIONS ----------------
 
 class TransactionView(APIView):
     def get(self, request):
-        transactions = Transaction.objects.filter(user=request.user)
+        transactions = Transaction.objects.filter(owner=request.user)
         serializer = TransactionSerializer(transactions, many=True)
         return Response(serializer.data)
 
@@ -69,7 +89,7 @@ class TransactionView(APIView):
 
 class CategoryView(APIView):
     def get(self, request):
-        categories = Category.objects.filter(user=request.user)
+        categories = Category.objects.filter(owner=request.user)
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data)
 
@@ -77,7 +97,7 @@ class CategoryView(APIView):
         serializer = CategorySerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            serializer.save(owner=request.user)
             return Response(serializer.data, status=201)
 
         return Response(serializer.errors, status=400)

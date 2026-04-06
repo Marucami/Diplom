@@ -1,15 +1,15 @@
 from django.urls import path
 from api.views import (
-    RegisterView, LoginView, LogoutView,
+    RegisterView, LoginView, LogoutView, AccountView, 
     TransactionView, CategoryView,
-    AnalyticsView, ForecastView
+    AnalyticsView, ForecastView, 
 )
 
 urlpatterns = [
     path('register/', RegisterView.as_view()),
     path('login/', LoginView.as_view()),
     path('logout/', LogoutView.as_view()),
-
+    path('accounts/', AccountView.as_view()),
     path('transactions/', TransactionView.as_view()),
     path('categories/', CategoryView.as_view()),
 

@@ -1,4 +1,6 @@
 from django.db.models import Sum
+from django.utils.timezone import now
+from datetime import timedelta
 from api.models import Transaction
 
 
@@ -10,25 +12,28 @@ class AnalyticsService:
         if not transactions.exists():
             return {"error": "Not enough data"}
 
-        income = transactions.filter(type="income").aggregate(Sum("amount"))["amount__sum"] or 0
-        expense = transactions.filter(type="expense").aggregate(Sum("amount"))["amount__sum"] or 0
+        last_month = now() - timedelta(days=30)
 
-        total_transactions = transactions.count()
+        monthly_income = transactions.filter(
+            type="income",
+            date__gte=last_month
+        ).aggregate(Sum("amount"))["amount__sum"] or 0
 
-        avg_income = income / total_transactions
-        avg_expense = expense / total_transactions
+        monthly_expense = transactions.filter(
+            type="expense",
+            date__gte=last_month
+        ).aggregate(Sum("amount"))["amount__sum"] or 0
 
-        net_income = avg_income - avg_expense
+        net = monthly_income - monthly_expense
 
-        if net_income <= 0:
-            return {"error": "Goal is not reachable with current spending"}
+        if net <= 0:
+            return {"error": "Goal unreachable"}
 
-        months = goal_amount / net_income
+        months = goal_amount / net
 
         return {
-            "goal": goal_amount,
-            "avg_income": round(avg_income, 2),
-            "avg_expense": round(avg_expense, 2),
-            "net_income": round(net_income, 2),
+            "monthly_income": round(monthly_income, 2),
+            "monthly_expense": round(monthly_expense, 2),
+            "net_income": round(net, 2),
             "months_to_reach": round(months, 2)
         }

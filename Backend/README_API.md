@@ -38,54 +38,6 @@ python -m venv venv
 venv\Scripts\activate   # или venv/bin/activate для Linux
 pip install -r requirements.txt 
 ```
-
-## ⚙️ Настройка
-### База данных (PostgreSQL)
-
-```SQL
--- Подключиться под суперпользователем postgres
-psql -U postgres
-
--- Создать базу данных
-CREATE DATABASE money_db;
-
--- Создать пользователя с паролем
-CREATE USER money_user WITH PASSWORD 'secure_password';
-
--- Дать все права на базу данных
-GRANT ALL PRIVILEGES ON DATABASE money_db TO money_user;
-```
-⚠️ Однако после этих действий пользователь money_user по умолчанию не имеет прав на создание таблиц внутри базы данных. Для этого нужно также выдать права на схему public (или создать отдельную схему):
-```SQL
--- Подключиться к целевой базе данных
-\c money_db;
-
--- Дать права на схему public
-GRANT ALL ON SCHEMA public TO money_user;
-GRANT ALL PRIVILEGES ON DATABASE money_db TO money_user;
-
--- Сделать пользователя владельцем базы данных (опционально)
-ALTER DATABASE money_db OWNER TO money_user;
-```
- Если вы используете pgAdmin, права выдаются через графический интерфейс:
-- ПКМ по базе данных → Properties → Security → добавить пользователя → ALL.
-- ПКМ по схеме public → Properties → Privileges → добавить пользователя → ALL.
-
-⚠️ Без прав на схему public Django не сможет выполнить миграции и получит ошибку: нет доступа к схеме public.
-
-В settings.py:
-```Python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'money_db',
-        'USER': 'money_user',
-        'PASSWORD': 'secure_password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
-```
 ---
 ## ▶️ Запуск 
 ```bash
@@ -95,33 +47,10 @@ python manage.py runserver
 ```
 📍 API: http://127.0.0.1:8000/
 
-⚡ Celery (опционально)
-```bash
-celery -A money_tracker worker --loglevel=info
-celery -A money_tracker beat --loglevel=info
-```
 ---
-
-## 📖 Документация API 
-- Swagger: http://127.0.0.1:8000/api/schema/swagger-ui/
-- ReDoc: http://127.0.0.1:8000/api/schema/redoc/
 
 👉 Полное описание API:
 API_REFERENCE.md
-
----
-
-## 🔐 Аутентификация 
-Используется JWT:
-```bash
-Authorization: Bearer <token>
-```
-📊 Пример использования
-```bash
-curl -X POST http://127.0.0.1:8000/api/login/ \
-  -H "Content-Type: application/json" \
-  -d '{"username":"alice","password":"Qwerty123"}'
-```
 
 ---
 
