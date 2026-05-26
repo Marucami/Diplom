@@ -1,0 +1,311 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link href="https://googleapis.com" rel="stylesheet">
+    
+    <style>
+        /* Внешняя оболочка: центрирует приложение на экране */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #2b2b2b; /* Темный фон за пределами приложения */
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #auth-app-window {
+            width: 1280px;
+            height: 960px;
+            background-color: #ffffff;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        /* Левая сторона (Формы) */
+        .auth-form-side {
+            width: 50%;
+            background-color: #ecf8ff; /* Светло-голубой фон из Figma */
+            padding: 60px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .brand-logo-placeholder {
+            width: 45px;
+            height: 45px;
+            background-color: #d97736;
+            border-radius: 6px;
+        }
+
+        /* Переключатель вкладок */
+        .nav-tabs-custom {
+            display: flex;
+            background-color: rgba(0, 0, 0, 0.04);
+            padding: 4px;
+            border-radius: 20px;
+            width: fit-content;
+            margin-bottom: 30px;
+        }
+
+        .nav-tabs-custom .tab-btn {
+            border: none;
+            background: none;
+            padding: 8px 24px;
+            font-weight: 500;
+            color: #8fa0af;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tabs-custom .tab-btn.active {
+            background-color: #c9efff;
+            color: #1a4f54;
+            font-weight: 600;
+        }
+
+        .form-control-custom {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 14px;
+        }
+
+        .btn-submit {
+            background-color: #2b7a78;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .btn-submit:hover { background-color: #205c5a; }
+
+        /* Скрытие блоков форм по умолчанию */
+        .auth-form-block { display: none; }
+        .auth-form-block.active { display: block; }
+
+        /* Правая сторона (Баннер) */
+        .auth-banner-side {
+            width: 50%;
+            background-color: #c9efff; /* Более насыщенный голубой */
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .character-img {
+            max-width: 260px;
+            margin-bottom: 40px;
+        }
+
+        /* Контейнер лозунгов */
+        .slogan-container {
+            height: 120px;
+        }
+        .slogan-item {
+            display: none;
+        }
+        .slogan-item.active {
+            display: block;
+        }
+
+        /* Индикаторы слайдера (Точки) */
+        .slider-dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: #a4b9c7;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .dot.active {
+            background-color: #d97736;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-app-window">
+        
+        <!-- ЛЕВАЯ СТОРОНА: УПРАВЛЕНИЕ ФОРМАМИ -->
+        <div class="auth-form-side">
+            <div>
+                <!-- Логотип -->
+                <div class="brand-logo-placeholder mb-5"></div>
+                
+                <!-- Кастомный переключатель (Вкладки) -->
+                <div class="nav-tabs-custom">
+                    <button class="tab-btn active" onclick="switchForm('login')">Войти</button>
+                    <button class="tab-btn" onclick="switchForm('register')">Создать аккаунт</button>
+                </div>
+
+                <!-- БЛОК 1: ФОРМА ВХОДА -->
+                <div id="login-form-block" class="auth-form-block active">
+                    <h2 class="fw-bold text-dark m-0 mb-1">Добро пожаловать!</h2>
+                    <p class="small text-danger mb-4">Рады видеть тебя снова.</p>
+                    
+                    <form method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small mb-1">Почта</label>
+                            <input type="email" name="username" class="form-control form-control-custom" placeholder="example@gmail.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small mb-1">Пароль</label>
+                            <input type="password" name="password" class="form-control form-control-custom" placeholder="••••••••" required>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMeLogin">
+                                <label class="form-check-label small text-secondary" for="rememberMeLogin">Запомнить меня</label>
+                            </div>
+                            <a href="#" class="small text-decoration-none text-info">Забыли пароль?</a>
+                        </div>
+                        <button type="submit" class="btn btn-submit">Войти</button>
+                    </form>
+                </div>
+
+                <!-- БЛОК 2: ФОРМА РЕГИСТРАЦИИ -->
+                <div id="register-form-block" class="auth-form-block">
+                    <h2 class="fw-bold text-dark m-0 mb-1">Создайте аккаунт</h2>
+                    <p class="small text-secondary mb-4">Уже есть аккаунт? <a href="#" onclick="switchForm('login')" class="text-decoration-none text-success">Войти</a></p>
+                    
+                    <form method="POST" action="{% url 'register' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small mb-1">Имя</label>
+                            <input type="text" name="first_name" class="form-control form-control-custom" placeholder="Ваше Имя" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small mb-1">Почта</label>
+                            <input type="email" name="email" class="form-control form-control-custom" placeholder="example@gmail.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small mb-1">Пароль</label>
+                            <input type="password" name="password" class="form-control form-control-custom" placeholder="••••••••" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small mb-1">Повторить пароль</label>
+                            <input type="password" name="password_confirm" class="form-control form-control-custom" placeholder="••••••••" required>
+                        </div>
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="rememberMeReg" checked>
+                            <label class="form-check-label small text-secondary" for="rememberMeReg">Запомнить меня</label>
+                        </div>
+                        <button type="submit" class="btn btn-submit">Зарегистрироваться</button>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Подвал формы -->
+            <div class="text-center" id="auth-footer-text">
+                <span class="small text-muted">У вас нет аккаунта? <a href="#" onclick="switchForm('register')" style="color: #2b7a78;" class="text-decoration-underline">Зарегистрироваться</a></span>
+            </div>
+        </div>
+
+        <!-- ПРАВАЯ СТОРОНА: БАННЕР С УМНЫМ СЛАЙДЕРОМ -->
+        <div class="auth-banner-side">
+            <!-- Рисунок Перри -->
+            <img src="{% static 'images/perry.png' %}" alt="Агент П" class="character-img img-fluid">
+
+            <!-- Контейнер со слайдами-лозунгами -->
+            <div class="slogan-container">
+                <div class="slogan-item active">
+                    <h3 class="fw-bold text-dark mb-2">Контролируй финансы — достигай целей</h3>
+                    <p class="text-secondary small">Удобный учет, аналитика и контроль твоих средств в одном месте.</p>
+                </div>
+                <div class="slogan-item">
+                    <h3 class="fw-bold text-dark mb-2">Умная аналитика расходов</h3>
+                    <p class="text-secondary small">Автоматическое распределение по категориям и наглядные графики.</p>
+                </div>
+                <div class="slogan-item">
+                    <h3 class="fw-bold text-dark mb-2">Планируй бюджет заранее</h3>
+                    <p class="text-secondary small">Создавай финансовые цели и следи за накоплениями в реальном времени.</p>
+                </div>
+            </div>
+
+            <!-- Индикаторы (Точки) -->
+            <div class="slider-dots">
+                <span class="dot active" onclick="setCurrentSlide(0)"></span>
+                <span class="dot" onclick="setCurrentSlide(1)"></span>
+                <span class="dot" onclick="setCurrentSlide(2)"></span>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    // 1. ПЕРЕКЛЮЧЕНИЕ ФОРМ (ВХОД / РЕГИСТРАЦИЯ) В ОДИН КЛИК
+    function switchForm(target) {
+        const loginBlock = document.getElementById('login-form-block');
+        const registerBlock = document.getElementById('register-form-block');
+        const footerText = document.getElementById('auth-footer-text');
+        const buttons = document.querySelectorAll('.tab-btn');
+
+        if (target === 'login') {
+            loginBlock.classList.add('active');
+            registerBlock.classList.remove('active');
+            buttons[0].classList.add('active');
+            buttons[1].classList.remove('active');
+            footerText.style.opacity = '1';
+        } else {
+            registerBlock.classList.add('active');
+            loginBlock.classList.remove('active');
+            buttons[1].classList.add('active');
+            buttons[0].classList.remove('active');
+            footerText.style.opacity = '0'; // Прячем нижнюю надпись на форме регистрации
+        }
+    }
+
+    // 2. СЛАЙДЕР ЛОЗУНГОВ (АВТО + ПО КЛИКУ НА ТОЧКИ)
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slogan-item');
+    const dots = document.querySelectorAll('.dot');
+    let sliderTimer = setInterval(nextSlide, 5000); // Интервал 5 секунд
+
+    function showSlide(index) {
+        slides.forEach(slide => slide.classList.remove('active'));
+        dots.forEach(dot => dot.classList.remove('active'));
+        
+        slides[index].classList.add('active');
+        dots[index].classList.add('active');
+        currentSlide = index;
+    }
+
+    function nextSlide() {
+        let next = (currentSlide + 1) % slides.length;
+        showSlide(next);
+    }
+
+    function setCurrentSlide(index) {
+        clearInterval(sliderTimer); // Сбрасываем таймер при ручном клике
+        showSlide(index);
+        sliderTimer = setInterval(nextSlide, 5000); // Запускаем заново
+    }
+</script>
+</body>
+</html>

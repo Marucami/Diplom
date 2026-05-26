@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Финансовый трекер{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://googleapis.com" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Мягкий светло-серый фон для всего сайта */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        /* Центральный контейнер приложения */
+        .app-container {
+            width: 100%;
+            max-width: 1280px; /* Ограничиваем максимальную ширину по вашей Figma */
+            margin: 0 auto;    /* Центрируем всю систему на экране */
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05); /* Легкая тень по бокам */
+        }
+
+        .app-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <div class="app-container">
+        
+        {% block header %}{% endblock %}
+
+        <div class="app-body">
+            {% block content %}
+            {% endblock %}
+        </div>
+
+        {% block footer %}{% endblock %}
+
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://jsdelivr.net"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

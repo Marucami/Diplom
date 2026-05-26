@@ -1,0 +1,446 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Финансовое приложение</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link href="https://googleapis.com" rel="stylesheet">
+    
+    <style>
+        /* Внешний фон веб-страницы */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Карточка на самой веб-странице */
+        .welcome-card {
+            background: white;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: center;
+            max-width: 550px;
+        }
+
+        /* Эффект размытия заднего фона при открытии модалки */
+        .modal-backdrop.show {
+            backdrop-filter: blur(8px);
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            opacity: 1 !important;
+        }
+
+        /* Жестко фиксированное окно приложения */
+        .modal-desktop {
+            width: 1280px !important;
+            max-width: 1280px !important;
+            min-width: 1280px !important;
+        }
+
+        .modal-desktop .modal-content {
+            height: 960px;
+            border-radius: 24px;
+            border: none;
+            overflow: hidden;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5);
+            background-color: #ffffff;
+        }
+
+        .modal-body-custom {
+            padding: 0;
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* ЛЕВАЯ СТОРОНА (Формы) */
+        .auth-form-side {
+            width: 50%;
+            background-color: #ecf8ff;
+            padding: 60px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .brand-logo-placeholder {
+            width: 45px;
+            height: 45px;
+            background-color: #d97736;
+            border-radius: 6px;
+        }
+
+        /* Вкладки переключателя */
+        .nav-tabs-custom {
+            display: flex;
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 4px;
+            border-radius: 30px;
+            width: fit-content;
+            margin-bottom: 35px;
+        }
+
+        .nav-tabs-custom .tab-btn {
+            border: none;
+            background: none;
+            padding: 10px 28px;
+            font-weight: 500;
+            color: #8fa0af;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tabs-custom .tab-btn.active {
+            background-color: #c9efff;
+            color: #1a4f54;
+            font-weight: 600;
+        }
+
+        /* Поля ввода (Инпуты) */
+        .form-label-custom {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .form-control-custom {
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 10px !important;
+            padding: 14px 16px !important;
+            color: #1e293b !important;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        .form-control-custom:focus {
+            border-color: #2b7a78 !important;
+            box-shadow: 0 0 0 3px rgba(43, 122, 120, 0.15) !important;
+        }
+
+        /* Кнопка отправки */
+        .btn-submit {
+            background-color: #2b7a78;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+            margin-top: 15px;
+        }
+
+        .btn-submit:hover { background-color: #1f5c5a; }
+
+        .auth-form-block { display: none; }
+        .auth-form-block.active { display: block; }
+
+        /* ПРАВАЯ СТОРОНА (Баннер со слайдером) */
+        .auth-banner-side {
+            width: 50%;
+            background-color: #c9efff;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .character-img {
+            max-width: 250px;
+            margin-bottom: 40px;
+        }
+
+        .slogan-container { height: 110px; }
+        .slogan-item { display: none; }
+        .slogan-item.active { display: block; }
+
+        .slider-dots { display: flex; gap: 8px; margin-top: 25px; }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: #a4b9c7;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .dot.active {
+            background-color: #d97736;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- СТРАНИЦА БРАУЗЕРА (Кнопка-триггер) -->
+    <div class="welcome-card">
+        <h2 class="fw-bold text-dark mb-3">Главный экран дипломной работы</h2>
+        <p class="text-secondary mb-4">Нажмите кнопку ниже, чтобы запустить десктопный интерфейс приложения.</p>
+        <button type="button" class="btn btn-primary btn-lg px-5 py-3 rounded-3 fw-medium shadow-sm" data-bs-toggle="modal" data-bs-target="#desktopAppModal">
+            Открыть финансовое приложение
+        </button>
+    </div>
+
+    <!-- ВСПЛЫВАЮЩЕЕ ОКНО ПРИЛОЖЕНИЯ (MODAL) -->
+    <div class="modal fade" id="desktopAppModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-desktop">
+            <div class="modal-content">
+                
+                <div class="modal-body modal-body-custom">
+                    
+                    <!-- ЛЕВАЯ СТОРОНА: ФОРМЫ АВТОРИЗАЦИИ -->
+                    <div class="auth-form-side">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-4">
+                                <div class="brand-logo-placeholder"></div>
+                                <!-- Крестик для закрытия окна приложения -->
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            
+                            <!-- Переключатель вкладок -->
+                            <div class="nav-tabs-custom">
+                                <button id="tab-btn-login" class="tab-btn active" onclick="switchForm('login')">Войти</button>
+                                <button id="tab-btn-register" class="tab-btn" onclick="switchForm('register')">Создать аккаунт</button>
+                            </div>
+
+                            <!-- ФОРМА 1: ВХОД -->
+                            <div id="login-form-block" class="auth-form-block active">
+                                <h3 class="fw-bold text-dark mb-1">Добро пожаловать!</h3>
+                                <p class="small text-secondary mb-4">Рады видеть тебя снова.</p>
+                                
+                                <form id="login-form">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <label class="form-label-custom">Почта</label>
+                                        <input type="email" name="username" class="form-control form-control-custom" placeholder="example@gmail.com" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label-custom">Пароль</label>
+                                        <input type="password" name="password" class="form-control form-control-custom" placeholder="••••••••" required>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="rememberMeLogin" style="cursor:pointer;">
+                                            <label class="form-check-label small text-secondary" for="rememberMeLogin" style="cursor:pointer;">Запомнить меня</label>
+                                        </div>
+                                        <a href="#" class="small text-decoration-none" style="color: #2b7a78;">Забыли пароль?</a>
+                                    </div>
+                                    <div id="login-error-message" class="text-danger small mb-2 fw-medium"></div>
+                                    <button type="submit" class="btn btn-submit">Войти</button>
+                                </form>
+                            </div>
+
+                            <!-- ФОРМА 2: РЕГИСТРАЦИЯ -->
+                            <div id="register-form-block" class="auth-form-block">
+                                <h3 class="fw-bold text-dark mb-1">Создайте аккаунт</h3>
+                                <p class="small text-secondary mb-4">Регистрация нового пользователя системы.</p>
+                                
+                                <form id="register-form">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <label class="form-label-custom">Имя</label>
+                                        <input type="text" name="first_name" class="form-control form-control-custom" placeholder="Ваше Имя" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label-custom">Почта</label>
+                                        <input type="email" name="email" class="form-control form-control-custom" placeholder="example@gmail.com" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label-custom">Пароль</label>
+                                        <input type="password" name="password" class="form-control form-control-custom" placeholder="••••••••" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label-custom">Повторить пароль</label>
+                                        <input type="password" name="password_confirm" class="form-control form-control-custom" placeholder="••••••••" required>
+                                    </div>
+                                    <div id="register-error-message" class="text-danger small mb-2 fw-medium"></div>
+                                    <button type="submit" class="btn btn-submit">Зарегистрироваться</button>
+                                </form>
+                            </div>
+
+                        </div>
+
+                        <!-- Подвал формы -->
+                        <div class="text-center" id="auth-footer-text">
+                            <span class="small text-muted">У вас нет аккаунта? <a href="javascript:void(0)" onclick="switchForm('register')" style="color: #2b7a78;" class="text-decoration-underline fw-semibold">Зарегистрироваться</a></span>
+                        </div>
+                    </div>
+
+                    <!-- ПРАВАЯ СТОРОНА: СЛАЙДЕР ЛОЗУНГОВ -->
+                    <div class="auth-banner-side">
+                        <img src="{% static 'images/perry.png' %}" alt="Агент П" class="character-img img-fluid">
+
+                        <div class="slogan-container">
+                            <div class="slogan-item active">
+                                <h4 class="fw-bold text-dark mb-2">Контролируй финансы — достигай целей</h4>
+                                <p class="text-secondary small px-4">Удобный учет, аналитика и контроль твоих средств в одном месте.</p>
+                            </div>
+                            <div class="slogan-item">
+                                <h4 class="fw-bold text-dark mb-2">Умная аналитика расходов</h4>
+                                <p class="text-secondary small px-4">Автоматическое распределение по категориям и наглядные графики.</p>
+                            </div>
+                            <div class="slogan-item">
+                                <h4 class="fw-bold text-dark mb-2">Планируй бюджет заранее</h4>
+                                <p class="text-secondary small px-4">Создавай financial goals и следи за накоплениями в реальном времени.</p>
+                            </div>
+                        </div>
+
+                        <div class="slider-dots">
+                            <span class="dot active" onclick="setCurrentSlide(0)"></span>
+                            <span class="dot" onclick="setCurrentSlide(1)"></span>
+                            <span class="dot" onclick="setCurrentSlide(2)"></span>
+                        </div>
+                    </div>
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://jsdelivr.net"></script>
+
+    <script>
+        // 1. ПЕРЕКЛЮЧЕНИЕ ФОРМ
+        function switchForm(target) {
+            const loginBlock = document.getElementById('login-form-block');
+            const registerBlock = document.getElementById('register-form-block');
+            const footerText = document.getElementById('auth-footer-text');
+            const tabLogin = document.getElementById('tab-btn-login');
+            const tabRegister = document.getElementById('tab-btn-register');
+
+            if (target === 'login') {
+                loginBlock.classList.add('active');
+                registerBlock.classList.remove('active');
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
+                footerText.style.opacity = '1';
+                footerText.style.pointerEvents = 'auto';
+            } else {
+                registerBlock.classList.add('active');
+                loginBlock.classList.remove('active');
+                tabRegister.classList.add('active');
+                tabLogin.classList.remove('active');
+                footerText.style.opacity = '0';
+                footerText.style.pointerEvents = 'none';
+            }
+        }
+
+        // 2. СЛАЙДЕР ЛОЗУНГОВ
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slogan-item');
+        const dots = document.querySelectorAll('.dot');
+        let sliderTimer = setInterval(nextSlide, 5000);
+
+        function showSlide(index) {
+            if(index >= slides.length || index < 0) return;
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+            currentSlide = index;
+        }
+
+        function nextSlide() {
+            let next = (currentSlide + 1) % slides.length;
+            showSlide(next);
+        }
+
+        function setCurrentSlide(index) {
+            clearInterval(sliderTimer);
+            showSlide(index);
+            sliderTimer = setInterval(nextSlide, 5000);
+        }
+
+        // 3. AJAX ОТПРАВКА ФОРМЫ ВХОДА
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const errorBlock = document.getElementById('login-error-message');
+            errorBlock.innerText = "";
+
+            fetch('/api/login/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadDashboard();
+                } else {
+                    errorBlock.innerText = data.errors;
+                }
+            })
+            .catch(err => {
+                errorBlock.innerText = "Ошибка соединения с сервером.";
+                console.error(err);
+            });
+        });
+
+        // 4. AJAX ОТПРАВКА ФОРМЫ РЕГИСТРАЦИИ
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const errorBlock = document.getElementById('register-error-message');
+            errorBlock.innerText = "";
+
+            fetch('/api/register/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadDashboard();
+                } else {
+                    errorBlock.innerText = data.errors;
+                }
+            })
+            .catch(err => {
+                errorBlock.innerText = "Ошибка соединения с сервером.";
+                console.error(err);
+            });
+        });
+
+        // 5. ДИНАМИЧЕСКАЯ ЗАГРУЗКА ДАШБОРДА
+        function loadDashboard() {
+            const modalBody = document.querySelector('.modal-body-custom');
+            modalBody.innerHTML = `<div class="w-100 h-100 d-flex align-items-center justify-content-center bg-white"><div class="spinner-border text-primary" role="status"></div></div>`;
+            
+            fetch('/api/dashboard/')
+                .then(response => response.text())
+                .then(html => {
+                    modalBody.innerHTML = html;
+                })
+                .catch(err => {
+                    modalBody.innerHTML = `<div class="p-5 text-danger">Не удалось загрузить личный кабинет. Пожалуйста, обновите страницу.</div>`;
+                    console.error(err);
+                });
+        }
+
+        // Автоматически открыть приложение при загрузке страницы
+        window.addEventListener('DOMContentLoaded', () => {
+            const myModal = new bootstrap.Modal(document.getElementById('desktopAppModal'));
+            myModal.show();
+        });
+    </script>
+</body>
+</html>

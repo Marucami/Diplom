@@ -1,0 +1,6 @@
+Django==6.0.5
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+django-filter==23.5
+#drf-spectacular==0.27.2
+pywebview==6.2.1
