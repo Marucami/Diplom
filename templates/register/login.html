@@ -1,14 +1,85 @@
-{% extends "base.html" %}
 {% load static %}
-
-{% block title %}Авторизация{% endblock %}
-
-{% block extra_css %}
-<!-- Подключение иконок Bootstrap Icons для глаза и чекбокса -->
-<link rel="stylesheet" href="https://jsdelivr.net">
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/manrope.css' %}">
 
 <style>
-    /* Центрируем блок авторизации на странице */
+            @font-face {
+        font-family: 'Manrope-ExtraLight';
+        src: url('../fonts/Manrope-ExtraLight.woff2') format('woff2'),
+            url('../fonts/Manrope-ExtraLight.woff') format('woff'),
+            url('../fonts/Manrope-ExtraLight.ttf') format('truetype');
+        font-weight: 200;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Light';
+        src: url('../fonts/Manrope-Light.woff2') format('woff2'),
+            url('../fonts/Manrope-Light.woff') format('woff'),
+            url('../fonts/Manrope-Light.ttf') format('truetype');
+        font-weight: 300;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Regular';
+        src: url('../fonts/Manrope-Regular.woff2') format('woff2'),
+            url('../fonts/Manrope-Regular.woff') format('woff'),
+            url('../fonts/Manrope-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Medium';
+        src: url('../fonts/Manrope-Medium.woff2') format('woff2'),
+            url('../fonts/Manrope-Medium.woff') format('woff'),
+            url('../fonts/Manrope-Medium.ttf') format('truetype');
+        font-weight: 500;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-SemiBold';
+        src: url('../fonts/Manrope-SemiBold.woff2') format('woff2'),
+            url('../fonts/Manrope-SemiBold.woff') format('woff'),
+            url('../fonts/Manrope-SemiBold.ttf') format('truetype');
+        font-weight: 600;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Bold';
+        src: url('../fonts/Manrope-Bold.woff2') format('woff2'),
+            url('../fonts/Manrope-Bold.woff') format('woff'),
+            url('../fonts/Manrope-Bold.ttf') format('truetype');
+        font-weight: 700;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-ExtraBold';
+        src: url('../fonts/Manrope-ExtraBold.woff2') format('woff2'),
+            url('../fonts/Manrope-ExtraBold.woff') format('woff'),
+            url('../fonts/Manrope-ExtraBold.ttf') format('truetype');
+        font-weight: 800;
+        font-display: swap;
+        font-style: normal;
+        }
+        
+
     .auth-page-container {
         display: flex;
         justify-content: center;
@@ -19,7 +90,6 @@
         padding: 0;
     }
 
-    /* Главное окно приложения — жестко фиксируем горизонтальный ряд */
     .auth-card-window {
         width: 100%;
         max-width: 1280px;
@@ -32,19 +102,17 @@
     }
 
 
-    /* ЛЕВАЯ СТОРОНА: ФОРМЫ (Ровно 50% ширины) */
     .auth-form-side {
-        flex: 1 1 0% !important; /* Делит экран строго поровну */
+        flex: 1 1 0% !important;
         width: 50% !important;
         max-width: 50% !important;
-        background-color: #ecf8ff;
+        background-color: #E5FBFF;
         padding: 60px 80px;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between;
     }
 
-    /* Квадратный оранжевый логотип */
     .brand-logo-placeholder {
         width: 44px;
         height: 44px;
@@ -53,7 +121,6 @@
         margin-bottom: 20px;
     }
 
-    /* Ссылки-подсказки под заголовками */
     .auth-switch-hint {
         font-size: 0.9rem;
         color: #64748b;
@@ -66,7 +133,6 @@
         font-weight: 500;
     }
 
-    /* Переключатель вкладок */
     .nav-tabs-custom {
         display: flex;
         background-color: transparent;
@@ -95,7 +161,6 @@
         border-radius: 10px;
     }
 
-    /* Формы и Инпуты */
     .form-group-custom {
         margin-bottom: 20px;
     }
@@ -133,7 +198,6 @@
         outline: none;
     }
 
-    /* Иконка скрытия/показа пароля */
     .password-toggle-icon {
         position: absolute;
         right: 16px;
@@ -144,7 +208,6 @@
         font-size: 1.2rem;
     }
 
-    /* Кастомный чекбокс */
     .form-check-custom {
         display: flex;
         align-items: center;
@@ -166,7 +229,6 @@
         cursor: pointer;
     }
 
-    /* Главная бирюзовая кнопка */
     .btn-submit {
         background-color: #2b7a78;
         color: #ffffff;
@@ -186,23 +248,24 @@
     .auth-form-block { display: none; }
     .auth-form-block.active { display: block; }
 
-    /* ПРАВАЯ СТОРОНА: БАННЕР (Ровно 50% ширины) */
+    /* ПРАВАЯ СТОРОНА: БАННЕР */
     .auth-banner-side {
-        flex: 1 1 0% !important; /* Делит экран строго поровну */
+        flex: 1 1 0% !important;
         width: 50% !important;
         max-width: 50% !important;
         background-color: #c9efff;
         padding: 40px !important;
+        padding-bottom: 140px !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        justify-content: center !important; /* Центрирует контент строго по центру своей половины */
+        justify-content: flex-end !important;
         text-align: center;
     }
 
     .banner-inner-content {
         width: 100%;
-        max-width: 440px; /* Удерживает Перри и тексты в аккуратных границах */
+        max-width: 440px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -220,18 +283,17 @@
     .slogan-container { 
         width: 100%;
         height: auto;
-        min-height: 140px; /* Фиксированная высота, чтобы при смене текста окно не прыгало */
+        min-height: 140px; 
         margin-bottom: 10px;
     }
 
-    /* Стили текста заголовков с красивым переносом */
     .slogan-title { 
         font-size: 1.8rem; 
         font-weight: 700; 
         color: #172a3a; 
         margin-bottom: 15px;
         line-height: 1.25;
-        white-space: normal; /* Разрешаем перенос слов */
+        white-space: normal;
     }
 
     .slogan-desc { 
@@ -242,6 +304,7 @@
     }
     
     .slogan-item { display: none; }
+
     .slogan-item.active { display: block; }
 
     .slider-dots { 
@@ -267,7 +330,6 @@
     }
 
 </style>
-{% endblock %}
 
 {% block content %}
 <div class="auth-page-container">
@@ -276,7 +338,6 @@
         <!-- ЛЕВАЯ СТОРОНА: ФОРМЫ -->
         <div class="auth-form-side">
             <div class="w-100">
-                <!-- Оранжевый логотип -->
                 <div class="brand-logo-placeholder"></div>
                 
                 <!-- БЛОК 1: ИНТЕРФЕЙС ВХОДА -->
@@ -368,11 +429,10 @@
         </div>
 
                 <!-- ПРАВАЯ СТОРОНА -->
-        <div class="auth-banner-side">
-            <!-- Добавляем эту центрирующую обертку -->
+        <div class="auth-banner-side" style="background-image: url('/static/images/background.png'); background-size: cover; background-position: center;">
             <div class="banner-inner-content">
                 
-                <img src="{% static 'images/perry.png' %}" alt="Агент П" class="character-img img-fluid">
+                <img src="{% static 'images/perry.png' %}" alt="Агент Финансов" class="character-img img-fluid">
 
                 <div class="slogan-container">
                     <div class="slogan-item active">
@@ -395,7 +455,7 @@
                     <span class="dot" onclick="setCurrentSlide(2)"></span>
                 </div>
 
-            </div> <!-- / .banner-inner-content -->
+            </div>
         </div>
 
 
@@ -405,7 +465,6 @@
 
 {% block extra_js %}
 <script>
-    // Показ и скрытие пароля по клику на глаз
     function togglePasswordVisibility(inputId, iconElement) {
         const passwordInput = document.getElementById(inputId);
         if (passwordInput.type === "password") {
@@ -419,7 +478,6 @@
         }
     }
 
-    // Переключение форм
     function switchForm(target) {
         const loginBlock = document.getElementById('login-form-block');
         const registerBlock = document.getElementById('register-form-block');
@@ -439,7 +497,6 @@
         }
     }
 
-    // Слайдер лозунгов
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slogan-item');
     const dots = document.querySelectorAll('.dot');

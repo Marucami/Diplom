@@ -1,267 +1,283 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Главная — Учет финансов{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Стилизация верхних карточек-показателей */
-    .metric-card {
-        background-color: #ffffff;
-        border-radius: 8px;
-        padding: 16px;
-        border: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-    .metric-title { font-size: 0.85rem; color: #6c757d; }
-    .metric-value { font-size: 1.4rem; font-weight: 700; color: #212529; }
-    
-    /* Стилизация основных контентных блоков */
-    .dashboard-block {
-        background-color: #ffffff;
-        border-radius: 12px;
-        padding: 20px;
-        height: 100%;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    }
-    .block-title { font-size: 1.1rem; font-weight: 700; color: #172a3a; margin-bottom: 20px; }
-
-    /* Элемент Счета */
-    .account-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 0;
-        border-bottom: 1px solid #f0f4f8;
-    }
-    .bank-badge {
-        width: 36px;
-        height: 36px;
-        background-color: #d97736;
-        border-radius: 50%;
-    }
-    .card-digits {
-        background-color: #e65b5b;
-        color: white;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-
-    /* Категории расходов */
-    .category-legend-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 0.85rem;
-        margin-bottom: 8px;
-    }
-    .color-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 2px;
-        display: inline-block;
-        margin-right: 8px;
-    }
-
-    /* Прогресс-бары целей */
-    .goal-item { margin-bottom: 15px; }
-    .progress-custom { height: 6px; background-color: #e9ecef; border-radius: 3px; }
-    .progress-bar-custom { background-color: #2b7a78; }
-
-    /* Баннер кастомизации */
-    .setup-banner {
-        background-color: #b3e5fc;
-        border-radius: 12px;
-        padding: 24px;
-        position: relative;
-        height: 100%;
-    }
-    .btn-setup {
-        background-color: #172a3a;
-        color: white;
-        border: none;
-        padding: 8px 24px;
-        border-radius: 6px;
-    }
-    .banner-character {
-        position: absolute;
-        right: 20px;
-        bottom: 10px;
-        width: 100px;
-    }
-</style>
-{% endblock %}
+{% block title %}Главная — Панель управления{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-0">
-    <h2 class="fw-bold text-dark mb-4">Главная</h2>
+{{ chart_data|json_script:"chart-data-json" }}
 
-    <!-- ВЕРХНИЙ РЯД: МЕТРИКИ -->
+<div class="container-fluid px-0">
+    
+    <!-- ЗАГОЛОВОК СТРАНИЦЫ -->
+    <div class="mb-4">
+        <h1 class="h3 fw-bold text-dark">Главная</h1>
+    </div>
+
+    <!-- БЛОК 1: ВЕРХНИЕ СУММАРНЫЕ КАРТОЧКИ -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-title">Общий баланс</div>
-                <div class="metric-value">1 000 000 ₽</div>
-                <a href="#" class="text-decoration-none small text-muted">Все счета</a>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm p-3 bg-white rounded-3">
+                <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem; tracking-wider: 0.05em;">Общий баланс</p>
+                <h3 class="fw-bold text-dark mb-2">1 000 000 ₽</h3>
+                <a href="#" class="text-decoration-none small fw-medium text-info mt-auto">Все счета</a>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-title">Доходы за месяц</div>
-                <div class="metric-value text-success">+ 145 000 ₽</div>
-                <div class="small text-success"><i class="bi bi-arrow-up-right"></i> 12%</div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm p-3 bg-white rounded-3">
+                <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem;">Доходы за месяц</p>
+                <h3 class="fw-bold text-success mb-2">+ 145 000 ₽</h3>
+                <p class="text-success small fw-medium mb-0 mt-auto d-flex align-items-center gap-1">
+                    <!-- стрелки вверх/вниз -->
+                    <!-- <img src="{% static 'icons/re-2.png' %}" alt="Доход" style="width: 14px; height: 14px;"> -->
+                     ↗12%
+                </p>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-title">Расходы за месяц</div>
-                <div class="metric-value text-danger">- 87 000 ₽</div>
-                <div class="small text-danger"><i class="bi bi-arrow-down-left"></i> 8%</div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm p-3 bg-white rounded-3">
+                <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem;">Расходы за месяц</p>
+                <h3 class="fw-bold text-danger mb-2">- 87 000 ₽</h3>
+                <p class="text-danger small fw-medium mb-0 mt-auto d-flex align-items-center gap-1">↙↗ 8% </p>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-title">План расходов на месяц</div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold small">87 000 / 100 000 ₽</span>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm p-3 bg-white rounded-3">
+                <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem;">План расходов на месяц</p>
+                <div class="d-flex justify-content-between align-items-baseline mb-2">
+                    <h5 class="fw-bold text-dark mb-0">87 000 <span class="text-muted fs-6 fw-normal">/ 100 000 ₽</span></h5>
                     <span class="text-info fw-bold small">87%</span>
                 </div>
-                <div class="progress progress-custom mt-2">
-                    <div class="progress-bar bg-info" style="width: 87%"></div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 87%"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- СРЕДНИЙ РЯД: СЧЕТА, АНАЛИТИКА, ЦЕЛИ -->
+    <!-- БЛОК 2: СРЕДНЯЯ СЕТКА (КАРТЫ, ГРАФИК, ЦЕЛИ) -->
     <div class="row g-4 mb-4">
-        <!-- Мои счета -->
-        <div class="col-lg-4">
-            <div class="dashboard-block d-flex flex-column justify-content-between">
-                <div>
-                    <div class="block-title">Мои счета</div>
-                    {% for i in "1234" %}
-                    <div class="account-item">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bank-badge"></div>
+        
+                <!-- КОЛОНКА А: МОИ СЧЕТА (ДИНАМИЧЕСКИЙ ВЫВОД) -->
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm p-4 bg-white" style="border-radius: 10px;">
+                <h5 class="font-weight-bold text-dark mb-3">Мои счета</h5>
+                <div class="d-flex flex-column">
+                    
+                    <!-- Цикл проходит по всем реальным счетам из базы данных -->
+                    {% for account in accounts %}
+                    <div class="d-flex align-items-center justify-content-between p-2 mb-2" style="background-color: #f4f9fb; border-radius: 8px;">
+                        <div class="d-flex align-items-center">
+                            <img src="{% static 'icons/wallet.png' %}" class="ui-icon me-3" alt="">
                             <div>
-                                <div style="font-size: 0.75rem; color:#aaa;">Банк 1</div>
-                                <div class="fw-bold" style="font-size: 0.95rem;">1 000 000 ₽</div>
+                                <!-- Название счета из базы -->
+                                <p class="text-muted mb-0" style="font-size: 0.7rem; line-height: 1.2;">{{ account.name }}</p>
+                                <!-- Баланс счета из базы -->
+                                <p class="mb-0 small font-weight-bold text-dark">{{ account.balance }} {{ account.currency }}</p>
                             </div>
                         </div>
-                        <div class="card-digits">1234</div>
+                        <!-- Последние 4 цифры или ID (зависит от того, есть ли такое поле у вас в модели) -->
+                        <span class="badge badge-danger p-2 font-mono" style="font-size: 0.75rem;">id: {{ account.id }}</span>
+                    </div>
+                    {% empty %}
+                    <!-- Если у пользователя еще нет ни одного счета -->
+                    <div class="text-center text-muted py-3 small">
+                        У вас пока нет открытых счетов
                     </div>
                     {% endfor %}
+                    
                 </div>
-                <div class="text-center mt-3">
-                    <a href="#" class="text-decoration-none small">Все счета</a>
-                </div>
+                <a href="#" class="text-center text-decoration-none small fw-medium text-info mt-auto">Все счета</a>
             </div>
         </div>
 
-        <!-- Расходы по категориям (График) -->
-        <div class="col-lg-4">
-            <div class="dashboard-block d-flex flex-column justify-content-between">
-                <div>
-                    <div class="block-title">Расходы по категориям</div>
-                    <div class="row align-items-center">
-                        <div class="col-6">
-                            <canvas id="expensesChart" width="130" height="130"></canvas>
-                        </div>
-                        <div class="col-6">
-                            <div class="category-legend-item">
-                                <span><span class="color-dot" style="background-color: #81c784;"></span>Продукты</span>
-                                <span class="text-muted">12 000 ₽</span>
-                            </div>
-                            <div class="category-legend-item">
-                                <span><span class="color-dot" style="background-color: #64b5f6;"></span>Транспорт</span>
-                                <span class="text-muted">8 640 ₽</span>
-                            </div>
-                            <div class="category-legend-item">
-                                <span><span class="color-dot" style="background-color: #ffb74d;"></span>Развлеч.</span>
-                                <span class="text-muted">2 000 ₽</span>
-                            </div>
-                            <div class="category-legend-item">
-                                <span><span class="color-dot" style="background-color: #ba68c8;"></span>Жильё</span>
-                                <span class="text-muted">32 000 ₽</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-center mt-3">
-                    <a href="#" class="text-decoration-none small">Смотреть аналитику</a>
-                </div>
-            </div>
-        </div>
 
-        <!-- Мои цели -->
-        <div class="col-lg-4">
-            <div class="dashboard-block d-flex flex-column justify-content-between">
-                <div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="block-title m-0">Мои цели</div>
-                        <a href="#" class="text-decoration-none small fw-semibold">+ Добавить цель</a>
+                <!-- КОЛОНКА Б: РАСХОДЫ ПО КАТЕГОРИЯМ (ПОЛНОЕ ИСПРАВЛЕНИЕ СДВИГА) -->
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm bg-white" style="border-radius: 10px;">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    
+                    <div>
+                        <!-- Заголовок блока -->
+                        <h5 class="font-weight-bold text-dark mb-4">Расходы по категориям</h5>
+                        <div class="d-flex align-items-center justify-content-between" style="width: 100%; min-height: 160px; overflow: hidden;">
+                            
+                            <!-- ЛЕВАЯ ЧАСТЬ: Изолированная зона для графика -->
+                            <div style="width: 160px; height: 160px; min-width: 130px; min-height: 130px; position: relative; flex-shrink: 0; display: block;">
+                                <canvas id="categoriesChart" width="180" height="180" style="width: 160px !important; height: 160px !important; display: block; position: absolute; top: 0; left: 0;"></canvas>
+                            </div>
+                            <div class="flex-grow-1 ps-3" style="font-size: 0.72rem; line-height: 1.7;">
+                                
+                                <!-- Категория: Продукты -->
+                                <!-- justify-content-between расталкивает название и сумму по разным краям строки -->
+                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                    <!-- Левая сторона строки: Иконка + Название -->
+                                    <div class="d-flex align-items-center">
+                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/groc.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        </div>
+                                        <span class="text-dark font-weight-medium">Продукты</span>
+                                    </div>
+                                    <!-- Правая сторона строки: Фиксированная колонка для цифр -->
+                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                        <span>12 000 ₽ (12%)</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Категория: Траспорт -->
+                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/car.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        </div>
+                                        <span class="text-dark font-weight-medium">Транспорт</span>
+                                    </div>
+                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                        <span>8 640 ₽ (9%)</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Категория: Развлечения -->
+                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/entert.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        </div>
+                                        <span class="text-dark font-weight-medium">Развлечения</span>
+                                    </div>
+                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                        <span>2 000 ₽ (2%)</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Категория: Жильё -->
+                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/home_icon.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        </div>
+                                        <span class="text-dark font-weight-medium">Жильё</span>
+                                    </div>
+                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                        <span>32 000 ₽ (32%)</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Категория: Рестораны -->
+                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/rest.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        </div>
+                                        <span class="text-dark font-weight-medium">Рестораны</span>
+                                    </div>
+                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                        <span>4 000 ₽ (4%)</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Категория: Другое -->
+                                <div class="text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/pin.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        </div>
+                                        <span class="text-dark font-weight-medium">Другое</span>
+                                    </div>
+                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                        <span>0 ₽ (0%)</span>
+                                    </div>
+                                </div>
+                                
+                            </div>
+
+                            
+                        </div>
                     </div>
                     
-                    {% for i in "123" %}
-                    <div class="goal-item">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span class="fw-semibold">🌴 Отпуск</span>
-                            <span class="text-muted">75 000 / 100 000 ₽</span>
-                            <span class="text-primary fw-bold">75%</span>
-                        </div>
-                        <div class="progress progress-custom">
-                            <div class="progress-bar progress-bar-custom" style="width: 75%"></div>
-                        </div>
+                    <!-- Ссылка внизу карточки -->
+                    <a href="#" class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Смотреть аналитику</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- КОЛОНКА В: МОИ ЦЕЛИ -->
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm p-4 bg-white rounded-3 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0">Мои цели</h5>
+                        <button class="btn btn-link p-0 text-decoration-none text-info small fw-bold">Добавить цель +</button>
                     </div>
-                    {% endfor %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for i in "123"|make_list %}
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center small mb-1" style="font-size: 0.75rem;">
+                                <!-- Ваша иконка travel вместо стандартного самолетика -->
+                                <span class="text-dark fw-medium d-flex align-items-center gap-1">
+                                    <img src="{% static 'icons/travel.png' %}" style="width: 16px; height: 16px;" alt=""> Отпуск
+                                </span>
+                                <span class="text-muted">75 000 / 100 000 ₽</span>
+                                <span class="fw-bold text-info">75%</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                <div class="text-center mt-2">
-                    <a href="#" class="text-decoration-none small">Все цели</a>
-                </div>
+                <a href="#" class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Все цели</a>
             </div>
         </div>
     </div>
 
-    <!-- НИЖНИЙ РЯД: ТРАНЗАКЦИИ И БАННЕР -->
+    <!-- БЛОК 3: НИЖНИЕ ПАНЕЛИ -->
     <div class="row g-4">
         <!-- Последние транзакции -->
-        <div class="col-lg-8">
-            <div class="dashboard-block">
-                <div class="block-title">Последние транзакции</div>
-                <div class="table-responsive">
-                    <table class="table table-borderless align-middle m-0">
-                        <tbody>
-                            <tr>
-                                <td class="text-muted small">Сегодня</td>
-                                <td><span class="color-dot" style="background-color: #81c784;"></span> Продукты</td>
-                                <td class="text-muted small">Тинькофф</td>
-                                <td class="text-danger fw-bold text-end">- 1 460 ₽</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted small">Сегодня</td>
-                                <td><span class="color-dot" style="background-color: #64b5f6;"></span> Зарплата</td>
-                                <td class="text-muted small">Тинькофф</td>
-                                <td class="text-success fw-bold text-end">+ 70 000 ₽</td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <div class="col-12 col-lg-8">
+            <div class="card h-100 border-0 shadow-sm p-4 bg-white rounded-3 d-flex flex-column justify-content-between">
+                <div>
+                    <h5 class="fw-bold text-dark mb-3">Последние транзакции</h5>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center small py-2.5 border-light">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="text-muted" style="width: 65px;">Сегодня</span>
+                                <span class="badge bg-success-subtle text-success rounded-pill px-2.5">Продукты</span>
+                                <span class="text-secondary">Тинькофф</span>
+                            </div>
+                            <span class="fw-bold text-danger">- 1 460 ₽</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center small py-2.5 border-0">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="text-muted" style="width: 65px;">Сегодня</span>
+                                <span class="badge bg-info-subtle text-info rounded-pill px-2.5">Зарплата</span>
+                                <span class="text-secondary">Тинькофф</span>
+                            </div>
+                            <span class="fw-bold text-success">+ 70 000 ₽</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="text-center mt-3">
-                    <a href="#" class="text-decoration-none small">Вся история</a>
-                </div>
+                <a href="#" class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Вся история</a>
             </div>
         </div>
 
-        <!-- Настройте категории -->
-        <div class="col-lg-4">
-            <div class="setup-banner">
-                <h5 class="fw-bold text-dark mb-2">Настройте категории и цели как вам удобно</h5>
-                <button class="btn-setup mt-2">Настроить</button>
-                <!-- Иллюстрация маленького питомца внизу баннера -->
-                <span class="banner-character" style="font-size: 2.5rem;">🐸</span>
+        <!-- Инфоблок с Перри -->
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 border-0 p-4 rounded-3 d-flex flex-column justify-content-between" style="background: linear-gradient(135deg, #bce3ee 0%, #9bcada 100%);">
+                <div>
+                    <h6 class="fw-bold mb-2" style="color: #113f50;">Настройте категории и цели как вам удобно</h6>
+                    <p class="mb-0 text-dark opacity-75" style="font-size: 0.75rem;">Кастомизируйте аналитическую панель под собственные финансовые привычки.</p>
+                </div>
+                <div class="d-flex justify-content-between align-items-end mt-4">
+                    <button class="btn btn-sm text-white fw-bold px-4 py-2 rounded-2" style="background-color: #1a586e; border: none;">
+                        Настроить
+                    </button>
+                    <!-- Ваша круглая иконка идей ideas.png вместо старой заглушки -->
+                    <img src="{% static 'images/sleepy.png' %}" alt="Идеи" style="width: 148px; height: 78px;">
+                </div>
             </div>
         </div>
     </div>
@@ -269,23 +285,52 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Подключаем плагин диаграмм Chart.js -->
-<script src="https://jsdelivr.net"></script>
 <script>
-    const ctx = document.getElementById('expensesChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [12000, 8640, 2000, 32000],
-                backgroundColor: ['#81c784', '#64b5f6', '#ffb74d', '#ba68c8'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            cutout: '75%',
-            plugins: { legend: { display: false } }
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof Chart !== 'undefined') {
+            const canvasElement = document.getElementById('categoriesChart');
+            
+            if (canvasElement) {
+                // БЕЗОПАСНЫЙ И ВАЛИДНЫЙ СИНТАКСИС ДЛЯ ДАННЫХ БЭКЕНДА
+                const rawData = document.getElementById('chart-data-json').textContent;
+                // Если бэкенд пустой, ставим массив нулей по умолчанию [0, 0, 0, 0, 0, 0]
+                const parsedChartData = rawData ? JSON.parse(rawData) : [0, 0, 0, 0, 0, 0];
+
+                new Chart(canvasElement, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Продукты', 'Транспорт', 'Развлечения', 'Жильё', 'Рестораны', 'Другое'],
+                        datasets: [{
+                            // Теперь здесь чистая переменная JavaScript, никакой каши с Django
+                            data: parsedChartData,
+                            backgroundColor: ['#4ade80', '#22d3ee', '#facc15', '#a78bfa', '#f87171', '#9ca3af'],
+                            borderWidth: 3, 
+                            borderColor: '#ffffff',
+                            borderRadius: 5, 
+                            cutout: '72%' 
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        maintainAspectRatio: false,
+                        circumference: 240, 
+                        rotation: 240, 
+                        layout: {
+                            padding: 4
+                        },
+                        plugins: {
+                            legend: {
+                                display: false 
+                            },
+                            tooltip: {
+                                enabled: true
+                            }
+                        }
+                    }
+                });
+            }
         }
     });
 </script>
 {% endblock %}
+

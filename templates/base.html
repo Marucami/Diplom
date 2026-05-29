@@ -4,59 +4,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Финансовый трекер{% endblock %}</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://jsdelivr.net" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://googleapis.com" rel="stylesheet">
+    <title>{% block title %}Панель управления{% endblock %}</title>
+    <link rel="icon" href="data:,">
+    
+    <!-- ПОДКЛЮЧЕНИЕ СКАЧАННОГО ВАМИ ЛОКАЛЬНОГО BOOTSTRAP CSS -->
+    <link class="styles-link" rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/manrope.css' %}">
     
     <style>
+        @font-face {
+        font-family: 'Manrope-ExtraLight';
+        src: url('../fonts/Manrope-ExtraLight.woff2') format('woff2'),
+            url('../fonts/Manrope-ExtraLight.woff') format('woff'),
+            url('../fonts/Manrope-ExtraLight.ttf') format('truetype');
+        font-weight: 200;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Light';
+        src: url('../fonts/Manrope-Light.woff2') format('woff2'),
+            url('../fonts/Manrope-Light.woff') format('woff'),
+            url('../fonts/Manrope-Light.ttf') format('truetype');
+        font-weight: 300;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Regular';
+        src: url('../fonts/Manrope-Regular.woff2') format('woff2'),
+            url('../fonts/Manrope-Regular.woff') format('woff'),
+            url('../fonts/Manrope-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Medium';
+        src: url('../fonts/Manrope-Medium.woff2') format('woff2'),
+            url('../fonts/Manrope-Medium.woff') format('woff'),
+            url('../fonts/Manrope-Medium.ttf') format('truetype');
+        font-weight: 500;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-SemiBold';
+        src: url('../fonts/Manrope-SemiBold.woff2') format('woff2'),
+            url('../fonts/Manrope-SemiBold.woff') format('woff'),
+            url('../fonts/Manrope-SemiBold.ttf') format('truetype');
+        font-weight: 600;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Bold';
+        src: url('../fonts/Manrope-Bold.woff2') format('woff2'),
+            url('../fonts/Manrope-Bold.woff') format('woff'),
+            url('../fonts/Manrope-Bold.ttf') format('truetype');
+        font-weight: 700;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-ExtraBold';
+        src: url('../fonts/Manrope-ExtraBold.woff2') format('woff2'),
+            url('../fonts/Manrope-ExtraBold.woff') format('woff'),
+            url('../fonts/Manrope-ExtraBold.ttf') format('truetype');
+        font-weight: 800;
+        font-display: swap;
+        font-style: normal;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9; /* Мягкий светло-серый фон для всего сайта */
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            margin: 0;
+            background-color: #eaf5f8;
+            font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        main {
+            padding-bottom: 110px;
         }
 
-        /* Центральный контейнер приложения */
-        .app-container {
-            width: 100%;
-            max-width: 1280px; /* Ограничиваем максимальную ширину по вашей Figma */
-            margin: 0 auto;    /* Центрируем всю систему на экране */
-            background-color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05); /* Легкая тень по бокам */
+        .navbar-custom {
+            background-color: #398B96;
+            height: 80px;
         }
 
-        .app-body {
-            flex: 1;
+        .header-settings-icon {
+            width: 32px !important;
+            height: 32px !important;
+            object-fit: contain;
+        }
+
+        .header-avatar-icon {
+            width: 38px !important;
+            height: 38px !important;
+            object-fit: contain;
+        }
+
+        .fixed-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #398B96;
+            z-index: 1030;
+            height: 80px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+        }
+
+        .footer-nav-link {
+            color: #b2d4e0;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: inline-flex;       
+            flex-direction: row;        
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;       
+            border-radius: 24px;        
+            height: 48px;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        
+        .footer-nav-link:hover {
+            background-color: #1F7680; 
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .footer-nav-link.active {
+            background-color: #1a586e; 
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .footer-icon {
+            width: 26px !important;
+            height: 26px !important;
+            object-fit: contain;
+            margin-right: 10px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .footer-nav-link span {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .ui-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .legend-icon {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
+        .brand-logo-placeholder {
+            width: 44px;
+            height: 44px;
+            background-color: #d97736;
+            border-radius: 6px;
         }
     </style>
-    {% block extra_css %}{% endblock %}
+
+    {% block extra_css %}
+    {% endblock %}
 </head>
 <body>
 
-    <div class="app-container">
-        
-        {% block header %}{% endblock %}
+        <!-- ХЕДЕР ПРИЛОЖЕНИЯ -->
+    <header class="navbar navbar-custom py-2 shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="brand-logo-placeholder"></div>
+            </div>
+            <div class="d-flex align-items-center">
+                <a href="#" class="me-3 d-inline-block">
 
-        <div class="app-body">
-            {% block content %}
-            {% endblock %}
+                    <!-- СДЕЛАТЬ ВСПЛЫВАЮЩЕЕ ОКНО НАСТРОЕК ИЛИ? -->
+
+                    <img src="{% static 'icons/settings1.png' %}" class="header-settings-icon" alt="Настройки">
+                </a>
+                <div class="d-flex align-items-center">
+                    <div class="text-end text-white me-2">
+
+                        <!-- НАСТРОИТЬ ВЫЗОВ ИМЯ-ПРОФИЛЬ -->
+
+                        <p class="mb-0 small font-weight-bold" style="line-height: 1;">Имя</p>
+                        <p class="mb-0 text-white-50 small" style="font-size: 0.7rem;">Профиль</p>
+                    </div>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background-color: #ffffff;">
+                        <img src="{% static 'images/perrys_face.png' %}" class="header-avatar-icon" alt="User">
+                    </div>
+                </div>
+            </div>
         </div>
+    </header>
 
-        {% block footer %}{% endblock %}
+    <!-- ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ -->
+    <main class="container py-4">
+        {% block content %}
+        {% endblock %}
+    </main>
 
-    </div>
+    <footer class="fixed-footer shadow-lg">
+        <div class="container" style="max-width: 900px; width: 100%;">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <!-- Кнопка: Главная -->
+                <a href="{% url 'dashboard' %}" class="footer-nav-link active">
+                    <img src="{% static 'icons/home1.png' %}" class="footer-icon" alt="">
+                    <span>Главная</span>
+                </a>
+                
+                <!-- СДЕЛАТЬ VIEWS & URLS ДЛЯ КАЖДОЙ СТРАНИЦЫ И ПОДКЛЮЧИТЬ  -->
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://jsdelivr.net"></script>
-    {% block extra_js %}{% endblock %}
+                
+                <!-- Кнопка: Счета -->
+                <a href="/templates/pages/bank_accounts.html" class="footer-nav-link">
+                <!-- <a href="{ % url 'bank_accounts' % }" class="footer-nav-link"> -->
+                    <img src="{% static 'icons/wallet1.png' %}" class="footer-icon" alt="">
+                    <span>Счета</span>
+                </a>
+                
+                <!-- Кнопка: Цели -->
+                <a href="/templates/pages/categories.html" class="footer-nav-link">
+                    <!-- <a href="{ % url 'categories' % }" class="footer-nav-link"> -->
+                    <img src="{% static 'icons/category1.png' %}" class="footer-icon" alt="">
+                    <span>Категории и цели</span>
+                </a>
+                
+                <!-- Кнопка: Аналитика -->
+                <a href="/templates/pages/analytics.html" class="footer-nav-link">
+                    <!-- <a href="{ % url 'analytics' % }" class="footer-nav-link"> -->
+                    <img src="{% static 'icons/anal1.png' %}" class="footer-icon" alt="">
+                    <span>Аналитика</span>
+                </a>
+                
+                <!-- Кнопка: Транзакции -->
+                <a href="/templates/pages/transactions.html" class="footer-nav-link">
+                    <!-- <a href="{ % url 'transactions' % }" class="footer-nav-link"> -->
+                    <img src="{% static 'icons/re1.png' %}" class="footer-icon" alt="">
+                    <span>Транзакции</span>
+                </a>
+                
+            </div>
+        </div>
+    </footer>
+
+    <!-- СКРИПТЫ ИЗ ВАШЕГО СКАЧАННОГО ДЕРЕВА СТАТИКИ -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/chart.min.js' %}"></script>
+    
+    {% block extra_js %}
+    {% endblock %}
 </body>
 </html>

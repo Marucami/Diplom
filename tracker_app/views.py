@@ -1,53 +1,64 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.models import User
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from api.models import Account, Transaction 
 
-def auth_view(request):
-    if request.method == 'POST':
-        action_type = request.POST.get('action_type')
+# ==========================================
+# 1. КОНТРОЛЛЕР СТРАНИЦЫ ВХОДА (LOGIN)
+# ==========================================
+def login_view(request):
+    # Если пользователь уже залогинен, сразу отправляем его на главную
+    if request.user.is_authenticated:
+        return redirect('dashboard')
         
-        # Обработка Входа
-        if action_type == 'login':
-            form = AuthenticationForm(request, data=request.POST)
-            if form.is_valid():
-                username = form.cleaned_data.get('username')
-                password = form.cleaned_data.get('password')
-                user = authenticate(username=username, password=password)
-                if user is not None:
-                    login(request, user)
-                    return redirect('dashboard')
-            return render(request, 'register/login.html', {'error': 'Неверный логин или пароль'})
-            
-        elif action_type == 'register':
-            data = request.POST
-            first_name = data.get('first_name')
-            email = data.get('email')
-            password = data.get('password')
-            password_confirm = data.get('password_confirm')
-
-            if password != password_confirm:
-                return render(request, 'register/login.html', {'error': 'Пароли не совпадают'})
-            if User.objects.filter(username=email).exists():
-                return render(request, 'register/login.html', {'error': 'Эта почта уже используется'})
-
-            user = User.objects.create_user(username=email, email=email, password=password, first_name=first_name)
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            # Получаем объект проверенного пользователя и авторизуем сессию
+            user = form.get_user()
             login(request, user)
             return redirect('dashboard')
+    else:
+        form = AuthenticationForm()
+        
+    # Обратите внимание на путь к шаблону: регистр папок должен точно совпадать с вашей файловой системой
+    return render(request, 'register/login.html', {'form': form})
 
-    return render(request, 'register/login.html')
-
-
-@login_required(login_url='login')
-def dashboard_view(request):
-    # Пока передаем пустой контекст, так как база данных пустая
-    context = {
-        'active_tab': 'main',
-    }
-    return render(request, 'pages/dashboard.html', context)
-
-
+# ==========================================
+# 2. КОНТРОЛЛЕР СТРАНИЦЫ ВЫХОДА (LOGOUT)
+# ==========================================
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+# ==========================================
+# 3. КОНТРОЛЛЕР ГЛАВНОЙ СТРАНИЦЫ (DASHBOARD)
+# ==========================================
+@login_required
+def dashboard_view(request):
+    user = request.user
+    
+    # Счета пользователя
+    accounts = Account.objects.filter(owner=user)
+    total_balance = accounts.aggregate(Sum('balance'))['balance__sum'] or 0
+    
+    # Расходы по категориям для Chart.js
+    categories = ['Продукты', 'Транспорт', 'Развлечения', 'Жильё', 'Рестораны', 'Другое']
+    chart_data = []
+    
+    for cat in categories:
+        amount = Transaction.objects.filter(
+            owner=user, 
+            type='OUT', 
+            category__name=cat
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        chart_data.append(float(amount))
+        
+    context = {
+        'accounts': accounts,
+        'total_balance': total_balance,
+        'chart_data': chart_data,
+    }
+    return render(request, 'pages/dashboard.html', context)
