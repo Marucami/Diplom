@@ -2,7 +2,7 @@ from django.urls import path
 from api.views import (
     RegisterView, LoginView, LogoutView, AccountView, 
     TransactionView, CategoryView,
-    AnalyticsView, ForecastView, 
+    AnalyticsView, ForecastView, MeView
 )
 
 urlpatterns = [
@@ -15,4 +15,5 @@ urlpatterns = [
 
     path('analytics/', AnalyticsView.as_view()),
     path('forecast/', ForecastView.as_view()),
+    path('me/', MeView.as_view()),
 ]
