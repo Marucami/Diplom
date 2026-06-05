@@ -1,6 +1,0 @@
-venv/
-*.zip
-*.rar
-__pycache__/
-build/
-dist/

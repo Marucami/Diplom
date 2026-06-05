@@ -1,0 +1,525 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/manrope.css' %}">
+
+<style>
+            @font-face {
+        font-family: 'Manrope-ExtraLight';
+        src: url('../fonts/Manrope-ExtraLight.woff2') format('woff2'),
+            url('../fonts/Manrope-ExtraLight.woff') format('woff'),
+            url('../fonts/Manrope-ExtraLight.ttf') format('truetype');
+        font-weight: 200;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Light';
+        src: url('../fonts/Manrope-Light.woff2') format('woff2'),
+            url('../fonts/Manrope-Light.woff') format('woff'),
+            url('../fonts/Manrope-Light.ttf') format('truetype');
+        font-weight: 300;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Regular';
+        src: url('../fonts/Manrope-Regular.woff2') format('woff2'),
+            url('../fonts/Manrope-Regular.woff') format('woff'),
+            url('../fonts/Manrope-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Medium';
+        src: url('../fonts/Manrope-Medium.woff2') format('woff2'),
+            url('../fonts/Manrope-Medium.woff') format('woff'),
+            url('../fonts/Manrope-Medium.ttf') format('truetype');
+        font-weight: 500;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-SemiBold';
+        src: url('../fonts/Manrope-SemiBold.woff2') format('woff2'),
+            url('../fonts/Manrope-SemiBold.woff') format('woff'),
+            url('../fonts/Manrope-SemiBold.ttf') format('truetype');
+        font-weight: 600;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-Bold';
+        src: url('../fonts/Manrope-Bold.woff2') format('woff2'),
+            url('../fonts/Manrope-Bold.woff') format('woff'),
+            url('../fonts/Manrope-Bold.ttf') format('truetype');
+        font-weight: 700;
+        font-display: swap;
+        font-style: normal;
+        }
+
+        @font-face {
+        font-family: 'Manrope-ExtraBold';
+        src: url('../fonts/Manrope-ExtraBold.woff2') format('woff2'),
+            url('../fonts/Manrope-ExtraBold.woff') format('woff'),
+            url('../fonts/Manrope-ExtraBold.ttf') format('truetype');
+        font-weight: 800;
+        font-display: swap;
+        font-style: normal;
+        }
+        
+
+    .auth-page-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f8fafc;
+        margin: 0;
+        padding: 0;
+    }
+
+    .auth-card-window {
+        width: 100%;
+        max-width: 1280px;
+        height: 100vh;
+        background-color: #ffffff;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch;
+        overflow: hidden;
+    }
+
+
+    .auth-form-side {
+        flex: 1 1 0% !important;
+        width: 50% !important;
+        max-width: 50% !important;
+        background-color: #E5FBFF;
+        padding: 60px 80px;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between;
+    }
+
+    .brand-logo-placeholder {
+        width: 44px;
+        height: 44px;
+        background-color: #d97736;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+
+    .auth-switch-hint {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin-top: 5px;
+        margin-bottom: 30px;
+    }
+    .auth-switch-hint a {
+        color: #2b7a78;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .nav-tabs-custom {
+        display: flex;
+        background-color: transparent;
+        padding: 0;
+        margin-bottom: 35px;
+        border: none;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .nav-tabs-custom .tab-btn {
+        border: none;
+        background: none;
+        padding: 8px 24px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #8fa0af;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .nav-tabs-custom .tab-btn.active {
+        background-color: #c9efff;
+        color: #1a4f54;
+        font-weight: 600;
+        border-radius: 10px;
+    }
+
+    .form-group-custom {
+        margin-bottom: 20px;
+    }
+
+    .form-label-custom {
+        font-size: 0.9rem;
+        color: #64748b;
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .input-wrapper-custom {
+        position: relative;
+    }
+
+    .form-control-custom {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 14px 16px !important;
+        padding-right: 45px !important;
+        color: #1e293b !important;
+        font-size: 1rem;
+        width: 100%;
+    }
+
+    .form-control-custom::placeholder {
+        color: #cbd5e1;
+    }
+
+    .form-control-custom:focus {
+        border-color: #2b7a78 !important;
+        box-shadow: 0 0 0 3px rgba(43, 122, 120, 0.1) !important;
+        outline: none;
+    }
+
+    .password-toggle-icon {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #cbd5e1;
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+
+    .form-check-custom {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 25px;
+        margin-bottom: 30px;
+    }
+
+    .form-check-custom input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #2b7a78;
+        cursor: pointer;
+    }
+
+    .form-check-custom label {
+        font-size: 0.95rem;
+        color: #64748b;
+        cursor: pointer;
+    }
+
+    .btn-submit {
+        background-color: #2b7a78;
+        color: #ffffff;
+        border: none;
+        width: 100%;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 500;
+        font-size: 1.05rem;
+        transition: background-color 0.2s;
+    }
+
+    .btn-submit:hover {
+        background-color: #1f5c5a;
+    }
+
+    .auth-form-block { display: none; }
+    .auth-form-block.active { display: block; }
+
+    /* ПРАВАЯ СТОРОНА: БАННЕР */
+    .auth-banner-side {
+        flex: 1 1 0% !important;
+        width: 50% !important;
+        max-width: 50% !important;
+        background-color: #c9efff;
+        padding: 40px !important;
+        padding-bottom: 140px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        text-align: center;
+    }
+
+    .banner-inner-content {
+        width: 100%;
+        max-width: 440px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .character-img {
+        max-width: 200px;
+        width: 100%;
+        height: auto;
+        margin-bottom: 35px;
+        display: block;
+    }
+
+    .slogan-container { 
+        width: 100%;
+        height: auto;
+        min-height: 140px; 
+        margin-bottom: 10px;
+    }
+
+    .slogan-title { 
+        font-size: 1.8rem; 
+        font-weight: 700; 
+        color: #172a3a; 
+        margin-bottom: 15px;
+        line-height: 1.25;
+        white-space: normal;
+    }
+
+    .slogan-desc { 
+        font-size: 0.95rem; 
+        color: #64748b; 
+        line-height: 1.5;
+        margin: 0;
+    }
+    
+    .slogan-item { display: none; }
+
+    .slogan-item.active { display: block; }
+
+    .slider-dots { 
+        display: flex; 
+        gap: 10px; 
+        margin-top: 25px; 
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .dot { 
+        width: 10px; 
+        height: 10px; 
+        background-color: #a4b9c7; 
+        border-radius: 50%; 
+        cursor: pointer; 
+        transition: all 0.2s ease; 
+    }
+    
+    .dot.active { 
+        background-color: #d97736; 
+        transform: scale(1.2); 
+    }
+
+</style>
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-card-window">
+        
+        <!-- ЛЕВАЯ СТОРОНА: ФОРМЫ -->
+        <div class="auth-form-side">
+            <div class="w-100">
+                <div class="brand-logo-placeholder"></div>
+                
+                <!-- БЛОК 1: ИНТЕРФЕЙС ВХОДА -->
+                <div id="login-form-block" class="auth-form-block active">
+                    <h2 class="fw-bold text-dark m-0" style="font-size: 2.2rem;">Войти в систему</h2>
+                    <p class="auth-switch-hint">У вас нет аккаунта? <a href="javascript:void(0)" onclick="switchForm('register')">Зарегистрироваться</a></p>
+
+                    <div class="nav-tabs-custom">
+                        <button id="tab-btn-login" class="tab-btn active" onclick="switchForm('login')">Войти</button>
+                        <button id="tab-btn-register" class="tab-btn" onclick="switchForm('register')">Создать аккаунт</button>
+                    </div>
+
+                    <form method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="login">
+                        
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">Почта</label>
+                            <input type="email" name="username" class="form-control form-control-custom" placeholder="example@gmail.com" required>
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">Пароль</label>
+                            <div class="input-wrapper-custom">
+                                <input type="password" id="login-pass" name="password" class="form-control form-control-custom" placeholder="••••••••" required>
+                                <i class="bi bi-eye password-toggle-icon" onclick="togglePasswordVisibility('login-pass', this)"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-check-custom">
+                            <input type="checkbox" id="rememberMeLogin">
+                            <label for="rememberMeLogin">Запомнить меня</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-submit">Войти</button>
+                    </form>
+                </div>
+
+                <!-- БЛОК 2: ИНТЕРФЕЙС РЕГИСТРАЦИИ -->
+                <div id="register-form-block" class="auth-form-block">
+                    <h2 class="fw-bold text-dark m-0" style="font-size: 2.2rem;">Создайте аккаунт</h2>
+                    <p class="auth-switch-hint">Уже есть аккаунт? <a href="javascript:void(0)" onclick="switchForm('login')">Войти</a></p>
+
+                    <div class="nav-tabs-custom">
+                        <button class="tab-btn" onclick="switchForm('login')">Войти</button>
+                        <button class="tab-btn active" onclick="switchForm('register')">Создать аккаунт</button>
+                    </div>
+
+                    <form method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="register">
+
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">Имя</label>
+                            <input type="text" name="first_name" class="form-control form-control-custom" placeholder="Ваше Имя" required>
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">Почта</label>
+                            <input type="email" name="email" class="form-control form-control-custom" placeholder="example@gmail.com" required>
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">Пароль</label>
+                            <div class="input-wrapper-custom">
+                                <input type="password" id="reg-pass" name="password" class="form-control form-control-custom" placeholder="••••••••" required>
+                                <i class="bi bi-eye password-toggle-icon" onclick="togglePasswordVisibility('reg-pass', this)"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">Повторить пароль</label>
+                            <div class="input-wrapper-custom">
+                                <input type="password" id="reg-pass-confirm" name="password_confirm" class="form-control form-control-custom" placeholder="••••••••" required>
+                                <i class="bi bi-eye password-toggle-icon" onclick="togglePasswordVisibility('reg-pass-confirm', this)"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-check-custom">
+                            <input type="checkbox" id="rememberMeReg" checked>
+                            <label for="rememberMeReg">Запомнить меня</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-submit">Зарегистрироваться</button>
+                    </form>
+                </div>
+            </div>
+            <div></div>
+        </div>
+
+                <!-- ПРАВАЯ СТОРОНА -->
+        <div class="auth-banner-side" style="background-image: url('/static/images/background.png'); background-size: cover; background-position: center;">
+            <div class="banner-inner-content">
+                
+                <img src="{% static 'images/perry.png' %}" alt="Агент Финансов" class="character-img img-fluid">
+
+                <div class="slogan-container">
+                    <div class="slogan-item active">
+                        <h2 class="slogan-title">Контролируй финансы —<br>достигай целей</h2>
+                        <p class="slogan-desc">Удобный учет, аналитика и контроль твоих средств в одном месте.</p>
+                    </div>
+                    <div class="slogan-item">
+                        <h2 class="slogan-title">Умная аналитика расходов</h2>
+                        <p class="slogan-desc">Автоматическое распределение по категориям и наглядные графики.</p>
+                    </div>
+                    <div class="slogan-item">
+                        <h2 class="slogan-title">Планируй бюджет заранее</h2>
+                        <p class="slogan-desc">Создавай финансовые цели и следи за накоплениями в реальном времени.</p>
+                    </div>
+                </div>
+
+                <div class="slider-dots">
+                    <span class="dot active" onclick="setCurrentSlide(0)"></span>
+                    <span class="dot" onclick="setCurrentSlide(1)"></span>
+                    <span class="dot" onclick="setCurrentSlide(2)"></span>
+                </div>
+
+            </div>
+        </div>
+
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePasswordVisibility(inputId, iconElement) {
+        const passwordInput = document.getElementById(inputId);
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            iconElement.classList.remove("bi-eye");
+            iconElement.classList.add("bi-eye-slash");
+        } else {
+            passwordInput.type = "password";
+            iconElement.classList.remove("bi-eye-slash");
+            iconElement.classList.add("bi-eye");
+        }
+    }
+
+    function switchForm(target) {
+        const loginBlock = document.getElementById('login-form-block');
+        const registerBlock = document.getElementById('register-form-block');
+        const tabLogin = document.getElementById('tab-btn-login');
+        const tabRegister = document.getElementById('tab-btn-register');
+
+        if (target === 'login') {
+            loginBlock.classList.add('active');
+            registerBlock.classList.remove('active');
+            tabLogin.classList.add('active');
+            tabRegister.classList.remove('active');
+        } else {
+            registerBlock.classList.add('active');
+            loginBlock.classList.remove('active');
+            tabRegister.classList.add('active');
+            tabLogin.classList.remove('active');
+        }
+    }
+
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slogan-item');
+    const dots = document.querySelectorAll('.dot');
+    let sliderTimer = setInterval(nextSlide, 5000);
+
+    function showSlide(index) {
+        if(index >= slides.length || index < 0) return;
+        slides.forEach(slide => slide.classList.remove('active'));
+        dots.forEach(dot => dot.classList.remove('active'));
+        slides[index].classList.add('active');
+        dots[index].classList.add('active');
+        currentSlide = index;
+    }
+
+    function nextSlide() {
+        let next = (currentSlide + 1) % slides.length;
+        showSlide(next);
+    }
+
+    function setCurrentSlide(index) {
+        clearInterval(sliderTimer);
+        showSlide(index);
+        sliderTimer = setInterval(nextSlide, 5000);
+    }
+</script>
+{% endblock %}

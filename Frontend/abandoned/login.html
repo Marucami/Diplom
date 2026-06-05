@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        display: flex;
+        height: 100%;
+        width: 100%;
+    }
+
+    /* Левая колонка - Форма */
+    .auth-form-side {
+        flex: 1;
+        background-color: #e3f2fd; /* Светлый оттенок левой части */
+        padding: 60px 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    /* Правая колонка - Баннер */
+    .auth-banner-side {
+        flex: 1;
+        background-color: #b3e5fc; /* Оттенок правой части */
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+    }
+
+    .brand-logo-placeholder {
+        width: 45px;
+        height: 45px;
+        background-color: #d97736; /* Оранжевый квадрат-логотип */
+        border-radius: 4px;
+    }
+
+    .nav-tabs-custom {
+        border-bottom: none;
+        margin-bottom: 30px;
+    }
+
+    .nav-tabs-custom .nav-link {
+        border: none;
+        color: #6c757d;
+        font-weight: 500;
+        padding: 5px 0;
+        margin-right: 20px;
+        background: none;
+    }
+
+    .nav-tabs-custom .nav-link.active {
+        color: #172a3a;
+        border-bottom: 2px solid #172a3a;
+        background: none;
+    }
+
+    .form-control-custom {
+        background-color: #ffffff;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        padding: 12px 15px;
+    }
+
+    .btn-login {
+        background-color: #236f75;
+        color: #ffffff;
+        border-radius: 8px;
+        padding: 12px;
+        font-weight: 500;
+        border: none;
+        width: 100%;
+    }
+
+    .btn-login:hover {
+        background-color: #1b5358;
+    }
+
+    .character-img {
+        max-width: 220px;
+        margin-bottom: 30px;
+    }
+
+    .slider-dots .dot {
+        width: 8px;
+        height: 8px;
+        background-color: #b0bec5;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 4px;
+    }
+
+    .slider-dots .dot.active {
+        background-color: #172a3a;
+        width: 24px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    
+    <!-- ЛЕВАЯ СТОРОНА: ФОРМА -->
+    <div class="auth-form-side">
+        <!-- Верхняя часть: Логотип -->
+        <div>
+            <div class="brand-logo-placeholder mb-5"></div>
+            
+            <h2 class="fw-bold text-dark m-0">Добро пожаловать!</h2>
+            <p class="text-muted small mb-4">Рады видеть тебя снова.</p>
+
+            <!-- Переключатель Войти / Создать аккаунт -->
+            <ul class="nav nav-tabs-custom">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Войти</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Создать аккаунт</a>
+                </li>
+            </ul>
+
+            <!-- Django Form / HTML Form -->
+            <form method="POST" action="">
+                {% csrf_token %} <!-- Защита Django -->
+                
+                <!-- Поле Почта -->
+                <div class="mb-3">
+                    <label class="form-label text-muted small mb-1">Почта</label>
+                    <input type="email" name="username" class="form-control form-control-custom" placeholder="example@gmail.com" required>
+                </div>
+
+                <!-- Поле Пароль -->
+                <div class="mb-3">
+                    <label class="form-label text-muted small mb-1">Пароль</label>
+                    <div class="position-relative">
+                        <input type="password" name="password" class="form-control form-control-custom" placeholder="••••••••" required>
+                        <!-- Иконка глаза (опционально, заглушка) -->
+                        <span class="position-absolute top-50 end-0 translate-middle-y me-3 text-muted" style="cursor: pointer;">👁</span>
+                    </div>
+                </div>
+
+                <!-- Чекбокс и Сброс пароля -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rememberMe" style="background-color: #236f75; border-color: #236f75;">
+                        <label class="form-check-label small text-secondary" for="rememberMe">
+                            Запомнить меня
+                        </label>
+                    </div>
+                    <a href="#" class="small text-decoration-none" style="color: #236f75;">Забыли пароль?</a>
+                </div>
+
+                <!-- Кнопка отправки -->
+                <button type="submit" class="btn btn-login mb-4">Войти</button>
+            </form>
+        </div>
+
+        <!-- Нижняя часть: Ссылка для регистрации -->
+        <div class="text-center">
+            <span class="small text-muted">У вас нет аккаунта? <a href="#" style="color: #236f75;" class="text-decoration-underline">Зарегистрироваться</a></span>
+        </div>
+    </div>
+
+    <!-- ПРАВАЯ СТОРОНА: ИЛЛЮСТРАЦИЯ -->
+    <div class="auth-banner-side">
+        <!-- Силуэты зданий на фоне (можно реализовать через CSS или SVG, пока оставляем простор) -->
+        
+        <!-- Персонаж Перри (замените src на ваш реальный путь к статике в Django) -->
+        <img src="{% static 'images/perry.png' %}" alt="Агент П" class="character-img img-fluid">
+
+        <h3 class="fw-bold text-dark mb-2" style="font-size: 1.6rem;">Контролируй финансы -<br>достигай целей</h3>
+        <p class="text-secondary small mb-5" style="max-width: 300px;">Удобный учет, аналитика и контроль твоих средств в одном месте.</p>
+
+        <!-- Точки слайдера -->
+        <div class="slider-dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

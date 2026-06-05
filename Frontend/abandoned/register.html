@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Создать аккаунт{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        display: flex;
+        height: 100vh; /* Теперь контейнер занимает весь экран */
+        width: 100vw;
+        overflow: hidden;
+    }
+
+    /* Левая колонка - Форма */
+    .auth-form-side {
+        flex: 1;
+        background-color: #ecf8ff; /* Нежно-голубой фон из Figma */
+        padding: 50px 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow-y: auto; /* Добавлено на случай маленьких экранов */
+    }
+
+    /* Правая колонка - Баннер */
+    .auth-banner-side {
+        flex: 1;
+        background-color: #c9efff; /* Более насыщенный голубой из Figma */
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .brand-logo-placeholder {
+        width: 45px;
+        height: 45px;
+        background-color: #d97736; /* Оранжевый логотип */
+        border-radius: 4px;
+    }
+
+    /* Переключатель вкладок */
+    .nav-tabs-custom {
+        border-bottom: none;
+        margin-bottom: 25px;
+    }
+
+    .nav-tabs-custom .nav-link {
+        border: none;
+        color: #8fa0af;
+        font-weight: 500;
+        padding: 8px 24px;
+        margin-right: 12px;
+        background: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    /* Стилизация активной вкладки "Создать аккаунт" по второму скриншоту */
+    .nav-tabs-custom .nav-link.active {
+        background-color: #c9efff; /* Цвет фона кнопки */
+        color: #1a4f54; /* Цвет текста */
+        font-weight: 600;
+    }
+
+    /* Кастомные поля ввода */
+    .form-control-custom {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: #333333;
+    }
+
+    .form-control-custom::placeholder {
+        color: #cbd5e1;
+    }
+
+    /* Основная кнопка "Зарегистрироваться" */
+    .btn-register {
+        background-color: #2b7a78;
+        color: #ffffff;
+        border-radius: 8px;
+        padding: 12px;
+        font-weight: 500;
+        border: none;
+        width: 100%;
+        transition: background-color 0.2s;
+    }
+
+    .btn-register:hover {
+        background-color: #205c5a;
+    }
+
+    .character-img {
+        max-width: 240px;
+        margin-bottom: 30px;
+    }
+
+    /* Навигационные точки */
+    .slider-dots .dot {
+        width: 8px;
+        height: 8px;
+        background-color: #a4b9c7;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 4px;
+    }
+
+    .slider-dots .dot.active {
+        background-color: #d97736; /* Выделенная точка */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    
+    <!-- ЛЕВАЯ СТОРОНА: РЕГИСТРАЦИЯ -->
+    <div class="auth-form-side">
+        <div>
+            <!-- Логотип -->
+            <div class="brand-logo-placeholder mb-4"></div>
+            
+            <!-- Заголовки -->
+            <h2 class="fw-bold text-dark m-0" style="font-size: 1.8rem;">Создайте аккаунт</h2>
+            <p class="small mb-4 text-secondary">Уже есть аккаунт? <a href="#" style="color: #2b7a78;" class="text-decoration-none">Войти</a></p>
+
+            <!-- Переключатель Войти / Создать аккаунт -->
+            <ul class="nav nav-tabs-custom">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Войти</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Создать аккаунт</a>
+                </li>
+            </ul>
+
+            <!-- Форма регистрации Django -->
+            <form method="POST" action="">
+                {% csrf_token %}
+                
+                <!-- Поле Имя -->
+                <div class="mb-3">
+                    <label class="form-label text-secondary small mb-1">Имя</label>
+                    <input type="text" name="first_name" class="form-control form-control-custom" placeholder="Ваше Имя" required>
+                </div>
+
+                <!-- Поле Почта -->
+                <div class="mb-3">
+                    <label class="form-label text-secondary small mb-1">Почта</label>
+                    <input type="email" name="email" class="form-control form-control-custom" placeholder="example@gmail.com" required>
+                </div>
+
+                <!-- Поле Пароль -->
+                <div class="mb-3">
+                    <label class="form-label text-secondary small mb-1">Пароль</label>
+                    <div class="position-relative">
+                        <input type="password" name="password" class="form-control form-control-custom" placeholder="••••••••" required>
+                        <span class="position-absolute top-50 end-0 translate-middle-y me-3 text-muted" style="cursor: pointer;">👁</span>
+                    </div>
+                </div>
+
+                <!-- Поле Повторить пароль -->
+                <div class="mb-3">
+                    <label class="form-label text-secondary small mb-1">Повторить пароль</label>
+                    <div class="position-relative">
+                        <input type="password" name="password_confirm" class="form-control form-control-custom" placeholder="••••••••" required>
+                        <span class="position-absolute top-50 end-0 translate-middle-y me-3 text-muted" style="cursor: pointer;">👁</span>
+                    </div>
+                </div>
+
+                <!-- Запомнить меня -->
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="rememberMe" checked style="background-color: #2b7a78; border-color: #2b7a78;">
+                    <label class="form-check-label small text-secondary" for="rememberMe">
+                        Запомнить меня
+                    </label>
+                </div>
+
+                <!-- Кнопка -->
+                <button type="submit" class="btn btn-register">Зарегистрироваться</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ПРАВАЯ СТОРОНА: ИЛЛЮСТРАЦИЯ -->
+    <div class="auth-banner-side">
+        <!-- Персонаж Перри -->
+        <img src="{% static 'images/perry.png' %}" alt="Агент П" class="character-img img-fluid">
+
+        <h3 class="fw-bold text-dark mb-2" style="font-size: 1.6rem;">Контролируй финансы -<br>достигай целей</h3>
+        <p class="text-secondary small mb-5" style="max-width: 320px;">Удобный учет, аналитика и контроль твоих средств в одном месте.</p>
+
+        <!-- Точки слайдера -->
+        <div class="slider-dots">
+            <span class="dot"></span>
+            <span class="dot active"></span>
+            <span class="dot"></span>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

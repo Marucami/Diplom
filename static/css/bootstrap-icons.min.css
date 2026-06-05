@@ -1,0 +1,28 @@
+/**
+ * Bootstrap Icons v1.11.1 - Embedded SVG Fallback
+ */
+.bi::before, [class^="bi-"]::before, [class*=" bi-"]::before {
+  display: inline-block;
+  font-style: normal;
+  font-weight: normal !important;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  vertical-align: -.125em;
+  -webkit-font-smoothing: antialiased;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  content: "";
+  width: 1.2em;
+  height: 1.2em;
+}
+/* Перевод используемых иконок на автономные SVG маски */
+.bi-gear-fill::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' fill='%23fff' viewBox='0 0 16 16'%3E%3Cpath d='M9.405 1.02c-.252-.81-1.413-.81-1.665 0L7.43 2.856c-.141.455-.61.69-1.042.515l-1.7-.687c-.773-.312-1.6.362-1.354 1.15l.688 1.7c.175.433-.06.902-.514 1.042l-1.836.57c-.81.252-.81 1.413 0 1.665l1.836.572c.456.141.69.61.514 1.042l-.688 1.7c-.246.788.581 1.462 1.354 1.15l1.7-.686c.433-.175.902.06 1.042.514l.57 1.836c.252.81 1.413.81 1.665 0l.572-1.836c.142-.456.61-.69 1.042-.514l1.7.686c.772.312 1.6-.362 1.354-1.15l-.686-1.7c-.175-.433.06-.902.514-1.042l1.836-.572c.81-.252.81-1.413 0-1.665l-1.836-.57c-.456-.142-.69-.61-.514-1.042l.686-1.7c.246-.788-.582-1.462-1.354-1.15l-1.7.687c-.433.175-.902-.06-1.042-.515L9.405 1.02zM8 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6z'/%3E%3C/svg%3E"); }
+.bi-person-fill::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' fill='%23fff' viewBox='0 0 16 16'%3E%3Cpath d='M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'/%3E%3C/svg%3E"); }
+.bi-house-door-fill::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' fill='%23b2d4e0' viewBox='0 0 16 16'%3E%3Cpath d='M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.495v3.505c0 .245.25.495.5.495h2c.25 0 .5-.25.5-.495V6.777L8 2.589 3.5 6.777v7.728c0 .245.25.495.5.495h2c.25 0 .5-.25.5-.495Z'/%3E%3C/svg%3E"); }
+.footer-nav-link.active .bi-house-door-fill::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' fill='%23fff' viewBox='0 0 16 16'%3E%3Cpath d='M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.495v3.505c0 .245.25.495.5.495h2c.25 0 .5-.25.5-.495V6.777L8 2.589 3.5 6.777v7.728c0 .245.25.495.5.495h2c.25 0 .5-.25.5-.495Z'/%3E%3C/svg%3E"); }
+.bi-credit-card-2-front::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' fill='%23b2d4e0' viewBox='0 0 16 16'%3E%3Cpath d='M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2zm11.5 2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h1zM2 5.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM2 8.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z'/%3E%3C/svg%3E"); }
+.bi-percent::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' fill='%23b2d4e0' viewBox='0 0 16 16'%3E%3Cpath d='M13.442 2.558a.625.625 0 0 1 0 .884l-10 10a.625.625 0 1 1-.884-.884l10-10a.625.625 0 0 1 .884 0zM4.5 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm7 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z'/%3E%3C/svg%3E"); }
+.bi-graph-up-arrow::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' fill='%23b2d4e0' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.707l-5.323 5.323a.5.5 0 0 1-.708 0L6 8.024l-4.146 4.147a.5.5 0 0 1-.708-.708l4.5-4.5a.5.5 0 0 1 .708 0L8.5 8.976 13.293 4.2H10.5a.5.5 0 0 1-.5-.5z'/%3E%3C/svg%3E"); }
+.bi-receipt::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' fill='%23b2d4e0' viewBox='0 0 16 16'%3E%3Cpath d='M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 13V2a.5.5 0 0 1 .053-.224l-.5-1a.5.5 0 0 1 .367-.27zM2 2v10.586l.5-.5a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.5.5V2H2z'/%3E%3C/svg%3E"); }
