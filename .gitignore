@@ -1,4 +1,6 @@
 venv/
+*.pyc
+*.pyo
 *.zip
 *.rar
 __pycache__/
