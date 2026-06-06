@@ -277,19 +277,26 @@
     {% block extra_js %}
     {% endblock %}
     <script>
+        //Написал Тимоша для отображения имени в профиле
         async function loadUser() {
             try {
                 const response = await fetch('/api/me/');
                 const user = await response.json();
 
-                document.getElementById('username').textContent =
-                    user.username;
+                // Показываем first_name, если есть, иначе username (email)
+                const displayName = user.first_name || user.username;
+                document.getElementById('username').textContent = displayName;
+
+                // Для отладки: выведите user в консоль
+                console.log('Данные пользователя:', user);
             } catch (error) {
-                console.error(error);
+                console.error('Ошибка загрузки профиля:', error);
+                document.getElementById('username').textContent = 'Ошибка';
             }
         }
 
-        loadUser();
+        // Загружаем данные после полной загрузки DOM
+        document.addEventListener('DOMContentLoaded', loadUser);
     </script>
 </body>
 

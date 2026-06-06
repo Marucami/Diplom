@@ -23,12 +23,15 @@ class RegisterView(APIView):
 
             user = serializer.save()
 
+            login(request, user)
+
             return Response(
                 {
                     "message": "User created successfully",
                     "id": user.id,
                     "username": user.username,
-                    "email": user.email
+                    "email": user.email,
+                    "authenticated": True
                 },
                 status=status.HTTP_201_CREATED
             )
@@ -220,5 +223,6 @@ class MeView(APIView):
     def get(self, request):
         return Response({
             "id": request.user.id,
-            "username": request.user.username
+            "username": request.user.username,
+            "first_name": request.user.first_name
         })
