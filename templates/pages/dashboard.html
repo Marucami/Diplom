@@ -7,7 +7,7 @@
 {{ chart_data|json_script:"chart-data-json" }}
 
 <div class="container-fluid px-0">
-    
+
     <!-- ЗАГОЛОВОК СТРАНИЦЫ -->
     <div class="mb-4">
         <h1 class="h3 fw-bold text-dark">Главная</h1>
@@ -17,8 +17,9 @@
     <div class="row g-3 mb-4">
         <div class="col-12 col-md-6 col-lg-3">
             <div class="card h-100 border-0 shadow-sm p-3 bg-white rounded-3">
-                <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem; tracking-wider: 0.05em;">Общий баланс</p>
-                <h3 class="fw-bold text-dark mb-2">1 000 000 ₽</h3>
+                <p class="text-muted text-uppercase fw-semibold mb-1"
+                    style="font-size: 0.72rem; tracking-wider: 0.05em;">Общий баланс</p>
+                <h3 class="fw-bold text-dark mb-2"> {{ total_balance }} ₽</h3>
                 <a href="#" class="text-decoration-none small fw-medium text-info mt-auto">Все счета</a>
             </div>
         </div>
@@ -26,11 +27,11 @@
         <div class="col-12 col-md-6 col-lg-3">
             <div class="card h-100 border-0 shadow-sm p-3 bg-white rounded-3">
                 <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem;">Доходы за месяц</p>
-                <h3 class="fw-bold text-success mb-2">+ 145 000 ₽</h3>
+                <h3 class="fw-bold text-success mb-2">+{{ income }} ₽</h3>
                 <p class="text-success small fw-medium mb-0 mt-auto d-flex align-items-center gap-1">
                     <!-- стрелки вверх/вниз -->
                     <!-- <img src="{% static 'icons/re-2.png' %}" alt="Доход" style="width: 14px; height: 14px;"> -->
-                     ↗12%
+                    ↗12%
                 </p>
             </div>
         </div>
@@ -38,16 +39,18 @@
         <div class="col-12 col-md-6 col-lg-3">
             <div class="card h-100 border-0 shadow-sm p-3 bg-white rounded-3">
                 <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem;">Расходы за месяц</p>
-                <h3 class="fw-bold text-danger mb-2">- 87 000 ₽</h3>
+                <h3 class="fw-bold text-danger mb-2">-{{ expense }} ₽</h3>
                 <p class="text-danger small fw-medium mb-0 mt-auto d-flex align-items-center gap-1">↙↗ 8% </p>
             </div>
         </div>
 
         <div class="col-12 col-md-6 col-lg-3">
             <div class="card h-100 border-0 shadow-sm p-3 bg-white rounded-3">
-                <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem;">План расходов на месяц</p>
+                <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem;">План расходов на месяц
+                </p>
                 <div class="d-flex justify-content-between align-items-baseline mb-2">
-                    <h5 class="fw-bold text-dark mb-0">87 000 <span class="text-muted fs-6 fw-normal">/ 100 000 ₽</span></h5>
+                    <h5 class="fw-bold text-dark mb-0">87 000 <span class="text-muted fs-6 fw-normal">/ 100 000 ₽</span>
+                    </h5>
                     <span class="text-info fw-bold small">87%</span>
                 </div>
                 <div class="progress" style="height: 6px;">
@@ -59,27 +62,31 @@
 
     <!-- БЛОК 2: СРЕДНЯЯ СЕТКА (КАРТЫ, ГРАФИК, ЦЕЛИ) -->
     <div class="row g-4 mb-4">
-        
-                <!-- КОЛОНКА А: МОИ СЧЕТА (ДИНАМИЧЕСКИЙ ВЫВОД) -->
+
+        <!-- КОЛОНКА А: МОИ СЧЕТА (ДИНАМИЧЕСКИЙ ВЫВОД) -->
         <div class="col-12 col-lg-4">
             <div class="card h-100 border-0 shadow-sm p-4 bg-white" style="border-radius: 10px;">
                 <h5 class="font-weight-bold text-dark mb-3">Мои счета</h5>
                 <div class="d-flex flex-column">
-                    
+
                     <!-- Цикл проходит по всем реальным счетам из базы данных -->
                     {% for account in accounts %}
-                    <div class="d-flex align-items-center justify-content-between p-2 mb-2" style="background-color: #f4f9fb; border-radius: 8px;">
+                    <div class="d-flex align-items-center justify-content-between p-2 mb-2"
+                        style="background-color: #f4f9fb; border-radius: 8px;">
                         <div class="d-flex align-items-center">
                             <img src="{% static 'icons/wallet.png' %}" class="ui-icon me-3" alt="">
                             <div>
                                 <!-- Название счета из базы -->
-                                <p class="text-muted mb-0" style="font-size: 0.7rem; line-height: 1.2;">{{ account.name }}</p>
+                                <p class="text-muted mb-0" style="font-size: 0.7rem; line-height: 1.2;">{{
+                                    account.name}}</p>
                                 <!-- Баланс счета из базы -->
-                                <p class="mb-0 small font-weight-bold text-dark">{{ account.balance }} {{ account.currency }}</p>
+                                <p class="mb-0 small font-weight-bold text-dark">{{ account.balance }} {{
+                                    account.currency }}</p>
                             </div>
                         </div>
                         <!-- Последние 4 цифры или ID (зависит от того, есть ли такое поле у вас в модели) -->
-                        <span class="badge badge-danger p-2 font-mono" style="font-size: 0.75rem;">id: {{ account.id }}</span>
+                        <span class="badge badge-danger p-2 font-mono" style="font-size: 0.75rem;">id: {{ account.id
+                            }}</span>
                     </div>
                     {% empty %}
                     <!-- Если у пользователя еще нет ни одного счета -->
@@ -87,137 +94,175 @@
                         У вас пока нет открытых счетов
                     </div>
                     {% endfor %}
-                    
+
                 </div>
                 <a href="#" class="text-center text-decoration-none small fw-medium text-info mt-auto">Все счета</a>
             </div>
         </div>
 
 
-                <!-- КОЛОНКА Б: РАСХОДЫ ПО КАТЕГОРИЯМ (ПОЛНОЕ ИСПРАВЛЕНИЕ СДВИГА) -->
+        <!-- КОЛОНКА Б: РАСХОДЫ ПО КАТЕГОРИЯМ (ПОЛНОЕ ИСПРАВЛЕНИЕ СДВИГА) -->
         <div class="col-12 col-lg-4">
             <div class="card h-100 border-0 shadow-sm bg-white" style="border-radius: 10px;">
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    
+
                     <div>
                         <!-- Заголовок блока -->
                         <h5 class="font-weight-bold text-dark mb-4">Расходы по категориям</h5>
-                        <div class="d-flex align-items-center justify-content-between" style="width: 100%; min-height: 160px; overflow: hidden;">
-                            
+                        <div class="d-flex align-items-center justify-content-between"
+                            style="width: 100%; min-height: 160px; overflow: hidden;">
+
                             <!-- ЛЕВАЯ ЧАСТЬ: Изолированная зона для графика -->
-                            <div style="width: 160px; height: 160px; min-width: 130px; min-height: 130px; position: relative; flex-shrink: 0; display: block;">
-                                <canvas id="categoriesChart" width="180" height="180" style="width: 160px !important; height: 160px !important; display: block; position: absolute; top: 0; left: 0;"></canvas>
+                            <div
+                                style="width: 160px; height: 160px; min-width: 130px; min-height: 130px; position: relative; flex-shrink: 0; display: block;">
+                                <canvas id="categoriesChart" width="180" height="180"
+                                    style="width: 160px !important; height: 160px !important; display: block; position: absolute; top: 0; left: 0;"></canvas>
                             </div>
                             <div class="flex-grow-1 ps-3" style="font-size: 0.72rem; line-height: 1.7;">
-                                
+
                                 <!-- Категория: Продукты -->
                                 <!-- justify-content-between расталкивает название и сумму по разным краям строки -->
-                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                <div
+                                    class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
                                     <!-- Левая сторона строки: Иконка + Название -->
                                     <div class="d-flex align-items-center">
-                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
-                                            <img src="{% static 'icons/groc.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        <div class="d-inline-block text-center me-2"
+                                            style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/groc.png' %}"
+                                                style="width:16px; height:16px; object-fit:contain; vertical-align: middle;"
+                                                alt="">
                                         </div>
                                         <span class="text-dark font-weight-medium">Продукты</span>
                                     </div>
                                     <!-- Правая сторона строки: Фиксированная колонка для цифр -->
-                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                    <div class="text-end text-muted"
+                                        style="width: 95px; flex-shrink: 0; padding-right: 8px;">
                                         <span>12 000 ₽ (12%)</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Категория: Траспорт -->
-                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                <div
+                                    class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center">
-                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
-                                            <img src="{% static 'icons/car.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        <div class="d-inline-block text-center me-2"
+                                            style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/car.png' %}"
+                                                style="width:16px; height:16px; object-fit:contain; vertical-align: middle;"
+                                                alt="">
                                         </div>
                                         <span class="text-dark font-weight-medium">Транспорт</span>
                                     </div>
-                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                    <div class="text-end text-muted"
+                                        style="width: 95px; flex-shrink: 0; padding-right: 8px;">
                                         <span>8 640 ₽ (9%)</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Категория: Развлечения -->
-                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                <div
+                                    class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center">
-                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
-                                            <img src="{% static 'icons/entert.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        <div class="d-inline-block text-center me-2"
+                                            style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/entert.png' %}"
+                                                style="width:16px; height:16px; object-fit:contain; vertical-align: middle;"
+                                                alt="">
                                         </div>
                                         <span class="text-dark font-weight-medium">Развлечения</span>
                                     </div>
-                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                    <div class="text-end text-muted"
+                                        style="width: 95px; flex-shrink: 0; padding-right: 8px;">
                                         <span>2 000 ₽ (2%)</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Категория: Жильё -->
-                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                <div
+                                    class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center">
-                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
-                                            <img src="{% static 'icons/home_icon.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        <div class="d-inline-block text-center me-2"
+                                            style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/home_icon.png' %}"
+                                                style="width:16px; height:16px; object-fit:contain; vertical-align: middle;"
+                                                alt="">
                                         </div>
                                         <span class="text-dark font-weight-medium">Жильё</span>
                                     </div>
-                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                    <div class="text-end text-muted"
+                                        style="width: 95px; flex-shrink: 0; padding-right: 8px;">
                                         <span>32 000 ₽ (32%)</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Категория: Рестораны -->
-                                <div class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                <div
+                                    class="mb-1 text-nowrap text-secondary d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center">
-                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
-                                            <img src="{% static 'icons/rest.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        <div class="d-inline-block text-center me-2"
+                                            style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/rest.png' %}"
+                                                style="width:16px; height:16px; object-fit:contain; vertical-align: middle;"
+                                                alt="">
                                         </div>
                                         <span class="text-dark font-weight-medium">Рестораны</span>
                                     </div>
-                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                    <div class="text-end text-muted"
+                                        style="width: 95px; flex-shrink: 0; padding-right: 8px;">
                                         <span>4 000 ₽ (4%)</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Категория: Другое -->
-                                <div class="text-nowrap text-secondary d-flex align-items-center justify-content-between">
+                                <div
+                                    class="text-nowrap text-secondary d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center">
-                                        <div class="d-inline-block text-center me-2" style="width: 24px; flex-shrink: 0;">
-                                            <img src="{% static 'icons/pin.png' %}" style="width:16px; height:16px; object-fit:contain; vertical-align: middle;" alt=""> 
+                                        <div class="d-inline-block text-center me-2"
+                                            style="width: 24px; flex-shrink: 0;">
+                                            <img src="{% static 'icons/pin.png' %}"
+                                                style="width:16px; height:16px; object-fit:contain; vertical-align: middle;"
+                                                alt="">
                                         </div>
                                         <span class="text-dark font-weight-medium">Другое</span>
                                     </div>
-                                    <div class="text-end text-muted" style="width: 95px; flex-shrink: 0; padding-right: 8px;">
+                                    <div class="text-end text-muted"
+                                        style="width: 95px; flex-shrink: 0; padding-right: 8px;">
                                         <span>0 ₽ (0%)</span>
                                     </div>
                                 </div>
-                                
+
                             </div>
 
-                            
+
                         </div>
                     </div>
-                    
+
                     <!-- Ссылка внизу карточки -->
-                    <a href="#" class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Смотреть аналитику</a>
+                    <a href="#" class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Смотреть
+                        аналитику</a>
                 </div>
             </div>
         </div>
 
         <!-- КОЛОНКА В: МОИ ЦЕЛИ -->
         <div class="col-12 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm p-4 bg-white rounded-3 d-flex flex-column justify-content-between">
+            <div
+                class="card h-100 border-0 shadow-sm p-4 bg-white rounded-3 d-flex flex-column justify-content-between">
                 <div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold text-dark mb-0">Мои цели</h5>
-                        <button class="btn btn-link p-0 text-decoration-none text-info small fw-bold">Добавить цель +</button>
+                        <button class="btn btn-link p-0 text-decoration-none text-info small fw-bold">Добавить цель
+                            +</button>
                     </div>
                     <div class="d-flex flex-column gap-3">
                         {% for i in "123"|make_list %}
                         <div>
-                            <div class="d-flex justify-content-between align-items-center small mb-1" style="font-size: 0.75rem;">
+                            <div class="d-flex justify-content-between align-items-center small mb-1"
+                                style="font-size: 0.75rem;">
                                 <!-- Ваша иконка travel вместо стандартного самолетика -->
                                 <span class="text-dark fw-medium d-flex align-items-center gap-1">
-                                    <img src="{% static 'icons/travel.png' %}" style="width: 16px; height: 16px;" alt=""> Отпуск
+                                    <img src="{% static 'icons/travel.png' %}" style="width: 16px; height: 16px;"
+                                        alt=""> Отпуск
                                 </span>
                                 <span class="text-muted">75 000 / 100 000 ₽</span>
                                 <span class="fw-bold text-info">75%</span>
@@ -238,11 +283,13 @@
     <div class="row g-4">
         <!-- Последние транзакции -->
         <div class="col-12 col-lg-8">
-            <div class="card h-100 border-0 shadow-sm p-4 bg-white rounded-3 d-flex flex-column justify-content-between">
+            <div
+                class="card h-100 border-0 shadow-sm p-4 bg-white rounded-3 d-flex flex-column justify-content-between">
                 <div>
                     <h5 class="fw-bold text-dark mb-3">Последние транзакции</h5>
                     <div class="list-group list-group-flush">
-                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center small py-2.5 border-light">
+                        <div
+                            class="list-group-item px-0 d-flex justify-content-between align-items-center small py-2.5 border-light">
                             <div class="d-flex align-items-center gap-3">
                                 <span class="text-muted" style="width: 65px;">Сегодня</span>
                                 <span class="badge bg-success-subtle text-success rounded-pill px-2.5">Продукты</span>
@@ -250,7 +297,8 @@
                             </div>
                             <span class="fw-bold text-danger">- 1 460 ₽</span>
                         </div>
-                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center small py-2.5 border-0">
+                        <div
+                            class="list-group-item px-0 d-flex justify-content-between align-items-center small py-2.5 border-0">
                             <div class="d-flex align-items-center gap-3">
                                 <span class="text-muted" style="width: 65px;">Сегодня</span>
                                 <span class="badge bg-info-subtle text-info rounded-pill px-2.5">Зарплата</span>
@@ -260,19 +308,23 @@
                         </div>
                     </div>
                 </div>
-                <a href="#" class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Вся история</a>
+                <a href="#" class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Вся
+                    история</a>
             </div>
         </div>
 
         <!-- Инфоблок с Перри -->
         <div class="col-12 col-lg-4">
-            <div class="card h-100 border-0 p-4 rounded-3 d-flex flex-column justify-content-between" style="background: linear-gradient(135deg, #bce3ee 0%, #9bcada 100%);">
+            <div class="card h-100 border-0 p-4 rounded-3 d-flex flex-column justify-content-between"
+                style="background: linear-gradient(135deg, #bce3ee 0%, #9bcada 100%);">
                 <div>
                     <h6 class="fw-bold mb-2" style="color: #113f50;">Настройте категории и цели как вам удобно</h6>
-                    <p class="mb-0 text-dark opacity-75" style="font-size: 0.75rem;">Кастомизируйте аналитическую панель под собственные финансовые привычки.</p>
+                    <p class="mb-0 text-dark opacity-75" style="font-size: 0.75rem;">Кастомизируйте аналитическую панель
+                        под собственные финансовые привычки.</p>
                 </div>
                 <div class="d-flex justify-content-between align-items-end mt-4">
-                    <button class="btn btn-sm text-white fw-bold px-4 py-2 rounded-2" style="background-color: #1a586e; border: none;">
+                    <button class="btn btn-sm text-white fw-bold px-4 py-2 rounded-2"
+                        style="background-color: #1a586e; border: none;">
                         Настроить
                     </button>
                     <!-- Ваша круглая иконка идей ideas.png вместо старой заглушки -->
@@ -286,10 +338,10 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         if (typeof Chart !== 'undefined') {
             const canvasElement = document.getElementById('categoriesChart');
-            
+
             if (canvasElement) {
                 // БЕЗОПАСНЫЙ И ВАЛИДНЫЙ СИНТАКСИС ДЛЯ ДАННЫХ БЭКЕНДА
                 const rawData = document.getElementById('chart-data-json').textContent;
@@ -304,23 +356,23 @@
                             // Теперь здесь чистая переменная JavaScript, никакой каши с Django
                             data: parsedChartData,
                             backgroundColor: ['#4ade80', '#22d3ee', '#facc15', '#a78bfa', '#f87171', '#9ca3af'],
-                            borderWidth: 3, 
+                            borderWidth: 3,
                             borderColor: '#ffffff',
-                            borderRadius: 5, 
-                            cutout: '72%' 
+                            borderRadius: 5,
+                            cutout: '72%'
                         }]
                     },
                     options: {
                         responsive: false,
                         maintainAspectRatio: false,
-                        circumference: 240, 
-                        rotation: 240, 
+                        circumference: 240,
+                        rotation: 240,
                         layout: {
                             padding: 4
                         },
                         plugins: {
                             legend: {
-                                display: false 
+                                display: false
                             },
                             tooltip: {
                                 enabled: true
@@ -333,4 +385,3 @@
     });
 </script>
 {% endblock %}
-

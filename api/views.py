@@ -1,5 +1,5 @@
 from api.models import Account, Transaction, Category
-from api.serializers import AccountSerializer, TransactionSerializer, CategorySerializer
+from api.serializers import AccountSerializer, TransactionSerializer, CategorySerializer, RegisterSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -8,24 +8,32 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from api.services.finance_service import FinanceService
 from api.services.analytics_service import AnalyticsService
+from django.shortcuts import get_object_or_404
 
 # ---------------- AUTH ----------------
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
 
-        if not username or not password:
-            return Response({"error": "Username and password required"}, status=400)
+        serializer = RegisterSerializer(data=request.data)
 
-        if User.objects.filter(username=username).exists():
-            return Response({"error": "User already exists"}, status=400)
+        if serializer.is_valid():
 
-        user = User.objects.create_user(username=username, password=password)
-        return Response({"message": "User created"}, status=201)
+            user = serializer.save()
 
+            return Response(
+                {
+                    "message": "User created successfully",
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -57,6 +65,7 @@ class LogoutView(APIView):
 
 class AccountView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         accounts = Account.objects.filter(owner=request.user)
         serializer = AccountSerializer(accounts, many=True)
@@ -64,35 +73,88 @@ class AccountView(APIView):
 
     def post(self, request):
         serializer = AccountSerializer(data=request.data)
+
         if serializer.is_valid():
             serializer.save(owner=request.user)
             return Response(serializer.data, status=201)
+
         return Response(serializer.errors, status=400)
+
+    def put(self, request, pk):
+        account = get_object_or_404(Account,pk=pk,owner=request.user)
+
+        serializer = AccountSerializer(account,data=request.data,partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk):
+        account = get_object_or_404(Account,pk=pk,owner=request.user)
+
+        account.delete()
+
+        return Response({"message": "Account deleted"},status=204)
 
 # ---------------- TRANSACTIONS ----------------
 
 class TransactionView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         transactions = Transaction.objects.filter(owner=request.user)
-        serializer = TransactionSerializer(transactions, many=True)
+
+        serializer = TransactionSerializer(transactions,many=True, context={"request": request})
+
         return Response(serializer.data)
 
     def post(self, request):
         service = FinanceService()
 
         try:
-            transaction = service.create_transaction(request.user, request.data)
-            serializer = TransactionSerializer(transaction)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            transaction = service.create_transaction(request.user,request.data)
+
+            serializer = TransactionSerializer(transaction,context={"request": request} )
+
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+
         except Exception as e:
-            return Response({"error": str(e)}, status=400)
+            return Response({"error": str(e)},status=400)
+
+    def put(self, request, pk):
+
+        transaction = get_object_or_404(Transaction,pk=pk,owner=request.user )
+
+        service = FinanceService()
+
+        try:
+
+            transaction = service.update_transaction(transaction, request.data)
+
+            serializer = TransactionSerializer(transaction,context={"request": request})
+            return Response(serializer.data)
+
+        except Exception as e:
+            return Response({"error": str(e)},status=400)
+
+    def delete(self, request, pk):
+
+        transaction = get_object_or_404(Transaction,pk=pk,owner=request.user)
+
+        service = FinanceService()
+
+        service.delete_transaction(transaction)
+
+        return Response({"message": "Transaction deleted"}, status=204)
 
 
 # ---------------- CATEGORIES ----------------
 
 class CategoryView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         categories = Category.objects.filter(owner=request.user)
         serializer = CategorySerializer(categories, many=True)
@@ -106,6 +168,23 @@ class CategoryView(APIView):
             return Response(serializer.data, status=201)
 
         return Response(serializer.errors, status=400)
+
+    def put(self, request, pk):
+        category = get_object_or_404(Category,pk=pk,owner=request.user)
+
+        serializer = CategorySerializer(category,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk):
+        category = get_object_or_404(Category,pk=pk,owner=request.user)
+
+        category.delete()
+
+        return Response({"message": "Category deleted"},status=204)
 
 
 # ---------------- ANALYTICS ----------------

@@ -1,92 +1,93 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Панель управления{% endblock %}</title>
     <link rel="icon" href="data:,">
-    
+
     <!-- ПОДКЛЮЧЕНИЕ СКАЧАННОГО ВАМИ ЛОКАЛЬНОГО BOOTSTRAP CSS -->
     <link class="styles-link" rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/manrope.css' %}">
-    
+
     <style>
         @font-face {
-        font-family: 'Manrope-ExtraLight';
-        src: url('../fonts/Manrope-ExtraLight.woff2') format('woff2'),
-            url('../fonts/Manrope-ExtraLight.woff') format('woff'),
-            url('../fonts/Manrope-ExtraLight.ttf') format('truetype');
-        font-weight: 200;
-        font-display: swap;
-        font-style: normal;
+            font-family: 'Manrope-ExtraLight';
+            src: url('../fonts/Manrope-ExtraLight.woff2') format('woff2'),
+                url('../fonts/Manrope-ExtraLight.woff') format('woff'),
+                url('../fonts/Manrope-ExtraLight.ttf') format('truetype');
+            font-weight: 200;
+            font-display: swap;
+            font-style: normal;
         }
 
         @font-face {
-        font-family: 'Manrope-Light';
-        src: url('../fonts/Manrope-Light.woff2') format('woff2'),
-            url('../fonts/Manrope-Light.woff') format('woff'),
-            url('../fonts/Manrope-Light.ttf') format('truetype');
-        font-weight: 300;
-        font-display: swap;
-        font-style: normal;
+            font-family: 'Manrope-Light';
+            src: url('../fonts/Manrope-Light.woff2') format('woff2'),
+                url('../fonts/Manrope-Light.woff') format('woff'),
+                url('../fonts/Manrope-Light.ttf') format('truetype');
+            font-weight: 300;
+            font-display: swap;
+            font-style: normal;
         }
 
         @font-face {
-        font-family: 'Manrope-Regular';
-        src: url('../fonts/Manrope-Regular.woff2') format('woff2'),
-            url('../fonts/Manrope-Regular.woff') format('woff'),
-            url('../fonts/Manrope-Regular.ttf') format('truetype');
-        font-weight: 400;
-        font-display: swap;
-        font-style: normal;
+            font-family: 'Manrope-Regular';
+            src: url('../fonts/Manrope-Regular.woff2') format('woff2'),
+                url('../fonts/Manrope-Regular.woff') format('woff'),
+                url('../fonts/Manrope-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-display: swap;
+            font-style: normal;
         }
 
         @font-face {
-        font-family: 'Manrope-Medium';
-        src: url('../fonts/Manrope-Medium.woff2') format('woff2'),
-            url('../fonts/Manrope-Medium.woff') format('woff'),
-            url('../fonts/Manrope-Medium.ttf') format('truetype');
-        font-weight: 500;
-        font-display: swap;
-        font-style: normal;
+            font-family: 'Manrope-Medium';
+            src: url('../fonts/Manrope-Medium.woff2') format('woff2'),
+                url('../fonts/Manrope-Medium.woff') format('woff'),
+                url('../fonts/Manrope-Medium.ttf') format('truetype');
+            font-weight: 500;
+            font-display: swap;
+            font-style: normal;
         }
 
         @font-face {
-        font-family: 'Manrope-SemiBold';
-        src: url('../fonts/Manrope-SemiBold.woff2') format('woff2'),
-            url('../fonts/Manrope-SemiBold.woff') format('woff'),
-            url('../fonts/Manrope-SemiBold.ttf') format('truetype');
-        font-weight: 600;
-        font-display: swap;
-        font-style: normal;
+            font-family: 'Manrope-SemiBold';
+            src: url('../fonts/Manrope-SemiBold.woff2') format('woff2'),
+                url('../fonts/Manrope-SemiBold.woff') format('woff'),
+                url('../fonts/Manrope-SemiBold.ttf') format('truetype');
+            font-weight: 600;
+            font-display: swap;
+            font-style: normal;
         }
 
         @font-face {
-        font-family: 'Manrope-Bold';
-        src: url('../fonts/Manrope-Bold.woff2') format('woff2'),
-            url('../fonts/Manrope-Bold.woff') format('woff'),
-            url('../fonts/Manrope-Bold.ttf') format('truetype');
-        font-weight: 700;
-        font-display: swap;
-        font-style: normal;
+            font-family: 'Manrope-Bold';
+            src: url('../fonts/Manrope-Bold.woff2') format('woff2'),
+                url('../fonts/Manrope-Bold.woff') format('woff'),
+                url('../fonts/Manrope-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-display: swap;
+            font-style: normal;
         }
 
         @font-face {
-        font-family: 'Manrope-ExtraBold';
-        src: url('../fonts/Manrope-ExtraBold.woff2') format('woff2'),
-            url('../fonts/Manrope-ExtraBold.woff') format('woff'),
-            url('../fonts/Manrope-ExtraBold.ttf') format('truetype');
-        font-weight: 800;
-        font-display: swap;
-        font-style: normal;
+            font-family: 'Manrope-ExtraBold';
+            src: url('../fonts/Manrope-ExtraBold.woff2') format('woff2'),
+                url('../fonts/Manrope-ExtraBold.woff') format('woff'),
+                url('../fonts/Manrope-ExtraBold.ttf') format('truetype');
+            font-weight: 800;
+            font-display: swap;
+            font-style: normal;
         }
 
         body {
             background-color: #eaf5f8;
             font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        
+
         main {
             padding-bottom: 110px;
         }
@@ -124,24 +125,24 @@
             color: #b2d4e0;
             text-decoration: none;
             font-size: 0.85rem;
-            display: inline-flex;       
-            flex-direction: row;        
+            display: inline-flex;
+            flex-direction: row;
             align-items: center;
             justify-content: center;
-            padding: 10px 20px;       
-            border-radius: 24px;        
+            padding: 10px 20px;
+            border-radius: 24px;
             height: 48px;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
-        
+
         .footer-nav-link:hover {
-            background-color: #1F7680; 
+            background-color: #1F7680;
             color: #ffffff;
             text-decoration: none;
         }
 
         .footer-nav-link.active {
-            background-color: #1a586e; 
+            background-color: #1a586e;
             color: #ffffff;
             font-weight: 600;
         }
@@ -186,9 +187,10 @@
     {% block extra_css %}
     {% endblock %}
 </head>
+
 <body>
 
-        <!-- ХЕДЕР ПРИЛОЖЕНИЯ -->
+    <!-- ХЕДЕР ПРИЛОЖЕНИЯ -->
     <header class="navbar navbar-custom py-2 shadow-sm">
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
@@ -206,10 +208,11 @@
 
                         <!-- НАСТРОИТЬ ВЫЗОВ ИМЯ-ПРОФИЛЬ -->
 
-                        <p class="mb-0 small font-weight-bold" style="line-height: 1;">Имя</p>
+                        <p id="username" class="mb-0 small font-weight-bold">Загрузка...</p>
                         <p class="mb-0 text-white-50 small" style="font-size: 0.7rem;">Профиль</p>
                     </div>
-                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background-color: #ffffff;">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 52px; height: 52px; background-color: #ffffff;">
                         <img src="{% static 'images/perrys_face.png' %}" class="header-avatar-icon" alt="User">
                     </div>
                 </div>
@@ -231,38 +234,38 @@
                     <img src="{% static 'icons/home1.png' %}" class="footer-icon" alt="">
                     <span>Главная</span>
                 </a>
-                
+
                 <!-- СДЕЛАТЬ VIEWS & URLS ДЛЯ КАЖДОЙ СТРАНИЦЫ И ПОДКЛЮЧИТЬ  -->
 
-                
+
                 <!-- Кнопка: Счета -->
-                <a href="/templates/pages/bank_accounts.html" class="footer-nav-link">
-                <!-- <a href="{ % url 'bank_accounts' % }" class="footer-nav-link"> -->
+                <a href="{% url 'accounts' %}" class="footer-nav-link">
+                    <!-- <a href="{ % url 'bank_accounts' % }" class="footer-nav-link"> -->
                     <img src="{% static 'icons/wallet1.png' %}" class="footer-icon" alt="">
                     <span>Счета</span>
                 </a>
-                
+
                 <!-- Кнопка: Цели -->
-                <a href="/templates/pages/categories.html" class="footer-nav-link">
+                <a href="{% url 'categories' %}" class="footer-nav-link">
                     <!-- <a href="{ % url 'categories' % }" class="footer-nav-link"> -->
                     <img src="{% static 'icons/category1.png' %}" class="footer-icon" alt="">
                     <span>Категории и цели</span>
                 </a>
-                
+
                 <!-- Кнопка: Аналитика -->
-                <a href="/templates/pages/analytics.html" class="footer-nav-link">
+                <a href="{% url 'analytics' %}" class="footer-nav-link">
                     <!-- <a href="{ % url 'analytics' % }" class="footer-nav-link"> -->
                     <img src="{% static 'icons/anal1.png' %}" class="footer-icon" alt="">
                     <span>Аналитика</span>
                 </a>
-                
+
                 <!-- Кнопка: Транзакции -->
-                <a href="/templates/pages/transactions.html" class="footer-nav-link">
+                <a href="{% url 'transactions' %}" class="footer-nav-link">
                     <!-- <a href="{ % url 'transactions' % }" class="footer-nav-link"> -->
                     <img src="{% static 'icons/re1.png' %}" class="footer-icon" alt="">
                     <span>Транзакции</span>
                 </a>
-                
+
             </div>
         </div>
     </footer>
@@ -270,8 +273,24 @@
     <!-- СКРИПТЫ ИЗ ВАШЕГО СКАЧАННОГО ДЕРЕВА СТАТИКИ -->
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/chart.min.js' %}"></script>
-    
+
     {% block extra_js %}
     {% endblock %}
+    <script>
+        async function loadUser() {
+            try {
+                const response = await fetch('/api/me/');
+                const user = await response.json();
+
+                document.getElementById('username').textContent =
+                    user.username;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        loadUser();
+    </script>
 </body>
+
 </html>

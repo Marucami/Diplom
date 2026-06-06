@@ -16,43 +16,112 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, validators=[validate_password])
-    password2 = serializers.CharField(write_only=True)
+    email = serializers.EmailField(required=False)
+    password = serializers.CharField(write_only=True,validators=[validate_password])
+
+    password2 = serializers.CharField(write_only=True,required=False)
 
     class Meta:
         model = User
-        fields = ("username", "email", "password", "password2", "first_name", "last_name")
+        fields = (
+            "username",
+            "email",
+            "password",
+            "password2",
+            "first_name",
+            "last_name"
+        )
 
     def validate(self, data):
-        if data.get("password") != data.get("password2"):
+
+        password2 = data.get("password2")
+
+        if password2 and data["password"] != password2:
             raise serializers.ValidationError("Пароли не совпадают")
+
         return data
 
-    def create(self, data):
-        user = User(
-            username=data["username"],
-            email=data["email"],
-            first_name=data.get("first_name", ""),
-            last_name=data.get("last_name", "")
+    def create(self, validated_data):
+
+        validated_data.pop("password2", None)
+
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            email=validated_data.get("email", ""),
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
+            password=validated_data["password"]
         )
-        user.set_password(data["password"])
-        user.save()
+
         return user
 
 
 class AccountSerializer(serializers.ModelSerializer):
+
+    owner_username = serializers.CharField(
+        source="owner.username",
+        read_only=True
+    )
+
     class Meta:
         model = Account
-        fields = "__all__"
-        read_only_fields = ("owner",)
+        fields = (
+            "id",
+            "name",
+            "balance",
+            "currency",
+            "owner",
+            "owner_username",
+            "created_at",
+        )
+
+        read_only_fields = (
+            "owner",
+            "owner_username",
+            "created_at",
+        )
 
 
 class CategorySerializer(serializers.ModelSerializer):
+
+    owner_username = serializers.CharField(
+        source="owner.username",
+        read_only=True
+    )
+
+    type_display = serializers.CharField(
+        source="get_type_display",
+        read_only=True
+    )
+
+    status_display = serializers.CharField(
+        source="get_status_display",
+        read_only=True
+    )
+
     class Meta:
         model = Category
-        fields = "__all__"
-        read_only_fields = ("owner", "balance")
+        fields = (
+            "id",
+            "name",
+            "type",
+            "type_display",
+            "balance",
+            "status",
+            "status_display",
+            "owner",
+            "owner_username",
+            "created_at",
+        )
+
+        read_only_fields = (
+            "owner",
+            "owner_username",
+            "balance",
+            "type_display",
+            "status_display",
+            "created_at",
+        )
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -64,6 +133,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
+
     tag_ids = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
@@ -72,10 +142,40 @@ class TransactionSerializer(serializers.ModelSerializer):
         required=False
     )
 
+    category_name = serializers.CharField(
+        source='category.name',
+        read_only=True
+    )
+
+    account_name = serializers.CharField(
+        source='account.name',
+        read_only=True
+    )
+
     class Meta:
         model = Transaction
-        fields = "__all__"
-        read_only_fields = ("owner",)
+        fields = (
+            "id",
+            "amount",
+            "date",
+            "description",
+            "type",
+            "account",
+            "account_name",
+            "category",
+            "category_name",
+            "tags",
+            "tag_ids",
+            "owner",
+            "created_at",
+        )
+
+        read_only_fields = (
+            "owner",
+            "created_at",
+            "account_name",
+            "category_name",
+        )
 
     def validate(self, data):
         user = self.context["request"].user
