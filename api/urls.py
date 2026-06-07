@@ -2,7 +2,8 @@ from django.urls import path
 from api.views import (
     RegisterView, LoginView, LogoutView, AccountView, 
     TransactionView, CategoryView,
-    AnalyticsView, ForecastView, MeView
+    AnalyticsView, ForecastView, MeView,
+    AvailableBanksListView, AvailableCategoriesListView
 )
 
 urlpatterns = [
@@ -21,4 +22,7 @@ urlpatterns = [
     path('analytics/', AnalyticsView.as_view()),
     path('forecast/', ForecastView.as_view()),
     path('me/', MeView.as_view()),
+    
+    path('available-banks/', AvailableBanksListView.as_view()),
+    path('available-categories/', AvailableCategoriesListView.as_view()),
 ]

@@ -4,5 +4,220 @@
 {% block title %}Категории и цели{% endblock %}
 
 {% block content %}
+<div class="container my-4" style="font-family: 'Manrope', sans-serif;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 fw-bold" style="color: #0b1a1e;">Категории</h1>
+        <button class="btn text-white px-4 py-2" style="background-color: #2c8a93; border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+            Добавить категорию +
+        </button>
+    </div>
 
+    <div class="row g-4" id="categories-container">
+        <div class="text-center py-5 text-muted">Загрузка ваших финансовых категорий и бюджетов...</div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" style="color: #0b1a1e;">Новая категория / Бюджет</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="add-category-form">
+                <div class="modal-body py-4">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Вариант категории</label>
+                        <select class="form-select" id="modal-category-template-select" style="border-radius: 10px;" required>
+                            <option value="">Загрузка шаблонов...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Сумма бюджета / Цели (₽)</label>
+                        <input type="number" step="0.01" class="form-control" name="target_amount" placeholder="Например: 15000" style="border-radius: 10px;">
+                    </div>
+
+                    <div class="modal-footer border-0 p-0 mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Отмена</button>
+                        <button type="submit" class="btn text-white px-4" style="background-color: #2c8a93; border-radius: 10px;">Создать</button>
+                    </div>
+                </div> 
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const container = document.getElementById('categories-container');
+
+    // 1. Отображаем карточки с индивидуальной цветовой схемой и иконкой из шаблона
+    async function fetchUserCategories() {
+        try {
+            const response = await fetch('/api/categories/');
+            if (!response.ok) throw new Error('Ошибка связи с сервером');
+            const categories = await response.json();
+            
+            container.innerHTML = '';
+            
+            if (categories.length === 0) {
+                container.innerHTML = '<div class="text-center py-5 text-muted">Категорий не обнаружено. Нажмите кнопку выше для добавления.</div>';
+                return;
+            }
+
+            categories.forEach(cat => {
+                const currentAmount = parseFloat(cat.balance) || 0;
+                // Защита от деления на 0: если target_amount равен 0 или отсутствует, берем 1
+                const targetAmount = parseFloat(cat.target_amount) || 20000; 
+                
+                const percent = Math.min(100, Math.round((currentAmount / targetAmount) * 100));
+                
+                // Берем цвет и иконку из шаблона, либо ставим базовые, если шаблон не привязан
+                const color = cat.template_color || '#2c8a93';
+                const icon = cat.template_icon || 'wallet1.png';
+
+                const cardHtml = `
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm p-4" style="border-radius: 16px; border-top: 4px solid ${color} !important; background-color: #ffffff;">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="p-3 me-3 d-flex align-items-center justify-content-center" style="background-color: ${color}15; border-radius: 50%; width: 48px; height: 48px;">
+                                        <img src="/static/icons/${icon}" style="width: 20px;">
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0 fw-semibold" style="color: ${color};">${cat.name}</h5>
+                                    </div>
+                                </div>
+                                <button onclick="deleteCategory(${cat.id})" class="btn btn-sm text-muted p-0 border-0 opacity-50 fs-4" style="line-height: 1;">&times;</button>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <p class="mb-1 fw-bold fs-5" style="color: #0b1a1e;">
+                                    ${Number(currentAmount).toLocaleString('ru-RU')} / ${Number(targetAmount).toLocaleString('ru-RU')} ₽
+                                </p>
+                                <div class="progress" style="height: 8px; border-radius: 4px; background-color: #f0f4f5;">
+                                    <div class="progress-bar" role="progressbar" style="width: ${percent}%; background-color: ${color}; border-radius: 4px;"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1 text-muted small">
+                                    <span>Накоплено</span>
+                                    <span class="fw-bold" style="color: ${color};">${percent}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        } catch (err) {
+            container.innerHTML = `<div class="text-center py-5 text-danger">${err.message}</div>`;
+        }
+    }
+
+    // Функция динамической подгрузки категорий из админки
+async function loadAvailableCategoryTemplates() {
+    try {
+        const response = await fetch('/api/available-categories/');
+        if (!response.ok) throw new Error('Ошибка загрузки шаблонов');
+        const templates = await response.json();
+        
+        const select = document.getElementById('modal-category-template-select');
+        if (select) {
+            select.innerHTML = '<option value="">Выберите шаблон</option>';
+            templates.forEach(t => {
+                select.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.name}</option>`);
+            });
+        }
+    } catch (e) {
+        console.error('Не удалось подгрузить шаблоны:', e);
+    }
+}
+
+// Обработчик отправки формы категорий
+document.getElementById('add-category-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const selectTemplate = document.getElementById('modal-category-template-select');
+    const targetAmountInput = this.querySelector('[name="target_amount"]');
+
+    let finalCategoryName = "";
+    if (selectTemplate && selectTemplate.value !== "") {
+        finalCategoryName = selectTemplate.options[selectTemplate.selectedIndex].text;
+    }
+
+    if (!finalCategoryName) {
+        alert('Пожалуйста, выберите шаблон категории.');
+        return;
+    }
+
+    const payload = {
+        name: finalCategoryName,
+        target_amount: targetAmountInput && targetAmountInput.value ? targetAmountInput.value : "0",
+        status: "AC", 
+        type: "EX"    
+    };
+
+    try {
+        const response = await fetch('/api/categories/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
+            this.reset();
+            fetchCategories(); // Перерисовка карточек на странице
+        } else {
+            const err = await response.json();
+            alert('Ошибка бэкенда: ' + JSON.stringify(err));
+        }
+    } catch (error) {
+        console.error(error);
+    }
+});
+
+
+    // Логика показа/скрытия кастомного инпута
+    const catTemplateSelect = document.getElementById('modal-category-template-select');
+    const customCatWrapper = document.getElementById('custom-category-name-wrapper');
+    const customCatInput = document.getElementById('custom-category-name-input');
+
+    if (catTemplateSelect) {
+        catTemplateSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customCatWrapper.classList.remove('d-none');
+                customCatInput.setAttribute('required', 'required');
+            } else {
+                customCatWrapper.classList.add('d-none');
+                customCatInput.removeAttribute('required');
+                customCatInput.value = '';
+            }
+        });
+    }
+
+
+    // 4. Функция удаления категории
+    async function deleteCategory(id) {
+        if (!confirm('Вы уверены, что хотите удалить эту категорию?')) return;
+        try {
+            const response = await fetch(`/api/categories/${id}/`, { method: 'DELETE' });
+            if (response.ok) {
+                fetchUserCategories(); // Обновляем список после успешного удаления
+            } else {
+                alert('Не удалось удалить категорию.');
+            }
+        } catch (err) {
+            console.error('Ошибка при удалении:', err);
+        }
+    }
+
+    // 5. Инициализация страницы после полной загрузки DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchUserCategories();     // Загружаем карточки пользователя
+        loadAvailableCategoryTemplates();   // Загружаем шаблоны для модального окна
+    });
+</script>
 {% endblock %}

@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
-
+from rest_framework import serializers
 
 class Account(models.Model):
     name = models.CharField(max_length=100)
+    bank = models.ForeignKey('AvailableBank', on_delete=models.SET_NULL, null=True, blank=True)
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     currency = models.CharField(max_length=3, default="RUB")
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
@@ -156,9 +157,9 @@ class Notification(models.Model):
         OTHER = "OT", "Другое"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
-    type = models.CharField(max_length=2, choices=Type.choices)
-
-    message = models.CharField(max_length=255)
+    type = models.CharField(max_length=2, choices=Type.choices, default=Type.OTHER)
+    title = models.CharField(max_length=200, blank=True, null=True)
+    message = models.TextField()
     is_read = models.BooleanField(default=False)
     link = models.CharField(max_length=255, blank=True)
 
@@ -167,3 +168,30 @@ class Notification(models.Model):
     def __str__(self):
         return f"{self.get_type_display()} ({self.user})"
     
+    
+# ЗАПОЛНЯТЬ ЧЕРЕЗ АДМИНКУ :(    
+class AvailableBank(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название банка")
+    color = models.CharField(max_length=20, default="#2c8a93", verbose_name="Цвет (HEX)")
+    logo_name = models.CharField(max_length=100, default="default_bank.png", verbose_name="Файл иконки")
+
+    class Meta:
+        verbose_name = "Доступный банк"
+        verbose_name_plural = "Доступные банки"
+
+    def __str__(self):
+        return self.name
+
+
+class AvailableCategoryTemplate(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название категории")
+    type = models.CharField(max_length=2, choices=[("IN", "Доход"), ("EX", "Расход"), ("BO", "Оба")], default="BO")
+    color = models.CharField(max_length=20, default="#2c8a93", verbose_name="Цвет темы")
+    icon_name = models.CharField(max_length=100, default="wallet1.png", verbose_name="Файл иконки")
+
+    class Meta:
+        verbose_name = "Шаблон категории"
+        verbose_name_plural = "Шаблоны категорий"
+
+    def __str__(self):
+        return self.name

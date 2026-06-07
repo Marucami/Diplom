@@ -4,5 +4,377 @@
 {% block title %}Банковские счета{% endblock %}
 
 {% block content %}
+<div class="container my-4" style="font-family: 'Manrope', sans-serif;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 fw-bold" style="color: #0b1a1e;">Счета</h1>
+        <button class="btn text-white px-4 py-2" style="background-color: #2c8a93; border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+            Добавить счёт +
+        </button>
+    </div>
 
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+        <div class="table-responsive p-3">
+            <table class="table align-middle mb-0">
+                <thead class="table-light text-muted">
+                    <tr>
+                        <th class="border-0 px-4">Счёт</th>
+                        <th class="border-0">Банк</th>
+                        <th class="border-0">Валюта</th>
+                        <th class="border-0">Баланс</th>
+                        <th class="border-0 text-end px-4">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="accounts-tbody">
+                    <tr><td colspan="5" class="text-center text-muted">Нет доступных счетов</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4 rounded-4 mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0" id="chart-title">Динамика доступных средств</h5>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Периоды">
+                <button type="button" onclick="changePeriod('week')" id="btn-week" class="btn btn-outline-secondary active">Неделя</button>
+                <button type="button" onclick="changePeriod('month')" id="btn-month" class="btn btn-outline-secondary">Месяц</button>
+                <button type="button" onclick="changePeriod('year')" id="btn-year" class="btn btn-outline-secondary">Год</button>
+            </div>
+        </div>
+        <div style="position: relative; height: 300px; width: 100%;">
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" style="color: #0b1a1e;">Новый счёт</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <form id="add-account-form">
+                <div class="modal-body py-4">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Вариант счёта</label>
+                        <select class="form-select" id="modal-account-template-select" style="border-radius: 10px;" required>
+                            <option value="">Выберите тип счета</option>
+                            <option value="1">Основная дебетовая карта</option>
+                            <option value="2">Зарплатная карта</option>
+                            <option value="3">Наличные деньги</option>
+                            <option value="4">Накопительный счёт / Вклад</option>
+                            <option value="5">Кредитная карта</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Банк</label>
+                        <select class="form-select" id="modal-bank-select" style="border-radius: 10px;" required>
+                            <option value="">Выберите банк</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Начальный баланс</label>
+                        <input type="number" step="0.01" class="form-control" name="balance" placeholder="0.00" style="border-radius: 10px;">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Валюта</label>
+                        <select class="form-select" name="currency" style="border-radius: 10px;" required>
+                            <option value="RUB" selected>Рубль (₽)</option>
+                            <option value="USD">Доллар ($)</option>
+                            <option value="EUR">Евро (€)</option>
+                        </select>
+                    </div>
+
+                    <div class="modal-footer border-0 p-0 mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Отмена</button>
+                        <button type="submit" class="btn text-white px-4" style="background-color: #2c8a93; border-radius: 10px;">Создать счет</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    let myChart = null;
+    let currentPeriod = 'week'; 
+    let globalAccountsData = []; 
+
+    // 1. Загрузка данных аккаунтов и отрисовка таблицы
+    async function loadAccountsData() {
+        try {
+            const response = await fetch('/api/accounts/');
+            if (!response.ok) throw new Error('Не удалось загрузить счета');
+            globalAccountsData = await response.json();
+            
+            const tbody = document.getElementById('accounts-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (globalAccountsData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">У вас нет открытых счетов.</td></tr>`;
+                destroyChart();
+                return;
+            }
+
+            globalAccountsData.forEach(acc => {
+                let bankDisplay = acc.bank_name || "Не указан";
+                let bankColor = acc.bank_color || "#2c8a93";
+
+                const tr = `
+                    <tr style="border-bottom: 1px solid #f2f4f5;">
+                        <td class="px-4 fw-medium text-dark">
+                            <span class="badge rounded-circle me-2" style="background-color: ${bankColor}; width: 10px; height: 10px; display: inline-block;"></span>
+                            ${acc.name}
+                        </td>
+                        <td class="text-secondary fw-medium" style="color: ${bankColor} !important;">${bankDisplay}</td>
+                        <td>${acc.currency}</td>
+                        <td class="fw-bold">${Number(acc.balance).toLocaleString('ru-RU')} ₽</td>
+                        <td class="text-end px-4">
+                            <button onclick="deleteAccount(${acc.id})" class="btn btn-sm btn-link text-danger text-decoration-none p-0 border-0">Удалить</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', tr);
+            });
+
+            updateTimelineChart();
+
+        } catch (e) {
+            console.error('Ошибка при загрузке счетов:', e);
+            const tbody = document.getElementById('accounts-tbody');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Ошибка загрузки данных. Проверьте консоль бэкенда.</td></tr>`;
+            }
+        }
+    }
+
+    // 2. Генератор исторических точек
+    function generateTimelineData(period, accounts) {
+        const totalBalance = accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
+        
+        let labels = [];
+        let data = [];
+        const now = new Date();
+
+        if (period === 'week') {
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(now.getDate() - i);
+                labels.push(d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }));
+                let variance = (i === 0) ? 0 : Math.sin(i * 1.5) * (totalBalance * 0.1);
+                data.push(Math.max(0, Math.round(totalBalance + variance)));
+            }
+        } else if (period === 'month') {
+            for (let i = 4; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(now.getDate() - (i * 7));
+                labels.push(d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }));
+                let variance = (i === 0) ? 0 : Math.cos(i) * (totalBalance * 0.18);
+                data.push(Math.max(0, Math.round(totalBalance + variance)));
+            }
+        } else if (period === 'year') {
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(now.getMonth() - i);
+                labels.push(d.toLocaleDateString('ru-RU', { month: 'short' }));
+                let variance = (i === 0) ? 0 : Math.sin(i) * (totalBalance * 0.25);
+                data.push(Math.max(0, Math.round(totalBalance + variance)));
+            }
+        }
+
+        return { labels, data, totalBalance };
+    }
+
+    // 3. Построение линейного графика
+    function updateTimelineChart() {
+        destroyChart();
+        const chartEl = document.getElementById('accountsChart');
+        if (!chartEl || globalAccountsData.length === 0) return;
+
+        const { labels, data, totalBalance } = generateTimelineData(currentPeriod, globalAccountsData);
+        
+        const chartTitleEl = document.getElementById('chart-title');
+        if (chartTitleEl) {
+            chartTitleEl.innerText = `Динамика доступных средств (${totalBalance.toLocaleString('ru-RU')} ₽)`;
+        }
+
+        const ctx = chartEl.getContext('2d');
+        
+        const gradient = ctx.createLinearGradient(0, 0, 0, chartEl.height || 300);
+        gradient.addColorStop(0, 'rgba(44, 138, 147, 0.35)');
+        gradient.addColorStop(1, 'rgba(44, 138, 147, 0.00)');
+
+        // ИСПРАВЛЕНО: В конструктор передаем элемент холста (chartEl) вместо контекста (ctx)
+        myChart = new Chart(chartEl, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Баланс',
+                    data: data,
+                    borderColor: '#2c8a93',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#2c8a93',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    backgroundColor: gradient,
+                    tension: 0.35 
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        grid: { color: '#f2f4f5' },
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                                if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+                                return value;
+                            }
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function changePeriod(period) {
+        currentPeriod = period;
+        ['week', 'month', 'year'].forEach(p => {
+            const btn = document.getElementById(`btn-${p}`);
+            if (btn) {
+                if (p === period) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+        });
+        updateTimelineChart();
+    }
+
+    function destroyChart() {
+        if (myChart) { myChart.destroy(); myChart = null; }
+    }
+
+    // 4. Подгрузка доступных банков
+    async function loadAvailableBanksToSelect() {
+        try {
+            const response = await fetch('/api/available-banks/');
+            if (!response.ok) throw new Error('Ошибка при получении списка банков');
+            const banks = await response.json();
+            
+            const select = document.getElementById('modal-bank-select');
+            if (select) {
+                select.innerHTML = '<option value="">Выберите банк</option>';
+                banks.forEach(bank => {
+                    select.insertAdjacentHTML('beforeend', `<option value="${bank.id}">${bank.name}</option>`);
+                });
+            }
+        } catch (error) {
+            console.error('Не удалось загрузить банки:', error);
+        }
+    }
+
+    // 5. Создание нового счета
+    document.getElementById('add-account-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const templateSelect = document.getElementById('modal-account-template-select');
+        const bankSelect = document.getElementById('modal-bank-select');
+        const balanceInput = this.querySelector('[name="balance"]');
+        const currencySelect = this.querySelector('[name="currency"]');
+        
+        let finalAccountName = templateSelect && templateSelect.selectedIndex > 0 ? templateSelect.options[templateSelect.selectedIndex].text : "";
+        let selectedBankId = bankSelect ? bankSelect.value : "";
+        
+        if (!finalAccountName || !selectedBankId) {
+            alert('Пожалуйста, выберите вариант счета и банк.');
+            return;
+        }
+        
+        const payload = {
+            name: finalAccountName,
+            bank_id: parseInt(selectedBankId, 10), 
+            balance: balanceInput && balanceInput.value ? balanceInput.value : "0",
+            currency: currencySelect ? currencySelect.value : "RUB"
+        };
+        
+        try {
+            const response = await fetch('/api/accounts/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (response.ok) {
+                const modalEl = document.getElementById('addAccountModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) modalInstance.hide();
+                
+                this.reset();
+                await loadAccountsData(); 
+            } else {
+                const errData = await response.json();
+                alert('Ошибка создания счета: ' + JSON.stringify(errData));
+            }
+        } catch (error) {
+            console.error('Ошибка сети:', error);
+        }
+    });
+
+    // 6. Удаление счета
+    async function deleteAccount(id) {
+        if (!confirm('Вы уверены, что хотите удалить этот счет?')) return;
+        try {
+            const response = await fetch(`/api/accounts/${id}/`, { 
+                method: 'DELETE',
+                headers: {
+                    // ИСПРАВЛЕНО: Добавлена CSRF-защита для удаления
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            if (response.ok) {
+                await loadAccountsData();
+            } else {
+                alert('Не удалось удалить счет.');
+            }
+        } catch (err) {
+            console.error('Ошибка при удалении счета:', err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadAccountsData();             
+        loadAvailableBanksToSelect();   
+    });
+</script>
 {% endblock %}

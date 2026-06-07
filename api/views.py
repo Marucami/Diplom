@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from api.services.finance_service import FinanceService
 from api.services.analytics_service import AnalyticsService
 from django.shortcuts import get_object_or_404
+from .models import AvailableBank, AvailableCategoryTemplate
 
 # ---------------- AUTH ----------------
 
@@ -226,3 +227,17 @@ class MeView(APIView):
             "username": request.user.username,
             "first_name": request.user.first_name
         })
+        
+# Эндпоинт для выпадающего списка банков
+class AvailableBanksListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        data = AvailableBank.objects.all().values('id', 'name', 'color', 'logo_name')
+        return Response(list(data))
+
+# Эндпоинт для выпадающего списка категорий
+class AvailableCategoriesListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        data = AvailableCategoryTemplate.objects.all().values('id', 'name', 'type', 'color', 'icon_name')
+        return Response(list(data))

@@ -57,47 +57,65 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class AccountSerializer(serializers.ModelSerializer):
-
-    owner_username = serializers.CharField(
-        source="owner.username",
-        read_only=True
-    )
+    owner_username = serializers.CharField(source="owner.username", read_only=True)
+    
+    # Поля для чтения информации о банке
+    bank_name = serializers.CharField(source='bank.name', read_only=True)
+    bank_color = serializers.ReadOnlyField(source='bank.color')
+    bank_logo = serializers.ReadOnlyField(source='bank.logo_name')
+    
+    # Поле для записи ID выбранного банка с фронтенда
+    bank_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
 
     class Meta:
         model = Account
-        fields = (
-            "id",
-            "name",
-            "balance",
-            "currency",
-            "owner",
-            "owner_username",
-            "created_at",
-        )
-
+        # Убираем системное поле 'bank', оставляя явные строковые поля и ID для записи
+        fields = [
+            'id', 
+            'name', 
+            'bank_id', 
+            'bank_name', 
+            'bank_color', 
+            'bank_logo', 
+            'owner_username', 
+            'balance', 
+            'currency'
+        ]
+        
         read_only_fields = (
             "owner",
             "owner_username",
             "created_at",
         )
 
+    def create(self, validated_data):
+        # Извлекаем bank_id до создания объекта модели
+        bank_id = validated_data.pop('bank_id', None)
+        
+        request = self.context.get('request')
+        if request and request.user and 'owner' not in validated_data:
+            validated_data['owner'] = request.user
+
+        account = Account.objects.create(**validated_data)
+        
+        if bank_id:
+            account.bank_id = bank_id
+            account.save()
+            
+        return account
+
 
 class CategorySerializer(serializers.ModelSerializer):
-
-    owner_username = serializers.CharField(
-        source="owner.username",
-        read_only=True
-    )
-
-    type_display = serializers.CharField(
-        source="get_type_display",
-        read_only=True
-    )
-
-    status_display = serializers.CharField(
-        source="get_status_display",
-        read_only=True
-    )
+    owner_username = serializers.CharField(source="owner.username", read_only=True)
+    type_display = serializers.CharField(source="get_type_display", read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    
+    # Поля для чтения оформления из шаблона
+    template_color = serializers.ReadOnlyField(source='template.color')
+    template_icon = serializers.ReadOnlyField(source='template.icon_name')
+    
+    # Поле для записи ID шаблона при создании категории через POST-запрос
+    template_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
 
     class Meta:
         model = Category
@@ -112,8 +130,11 @@ class CategorySerializer(serializers.ModelSerializer):
             "owner",
             "owner_username",
             "created_at",
+            "template_color",  
+            "template_icon",   
+            "template_id",     
         )
-
+        
         read_only_fields = (
             "owner",
             "owner_username",
@@ -122,6 +143,15 @@ class CategorySerializer(serializers.ModelSerializer):
             "status_display",
             "created_at",
         )
+
+    def create(self, validated_data):
+        # Логика сохранения template_id в модель Category
+        template_id = validated_data.pop('template_id', None)
+        category = Category.objects.create(**validated_data)
+        if template_id:
+            category.template_id = template_id
+            category.save()
+        return category
 
 
 class TagSerializer(serializers.ModelSerializer):

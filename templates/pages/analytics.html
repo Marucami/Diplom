@@ -4,5 +4,100 @@
 {% block title %}Аналитика{% endblock %}
 
 {% block content %}
+<div class="container my-4" style="font-family: 'Manrope', sans-serif;">
+    <h1 class="h3 mb-4 fw-bold" style="color: #0b1a1e;">Аналитика</h1>
 
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px;">
+                <h6 class="text-muted mb-4 fw-semibold">Соотношение доходов и расходов</h6>
+                <div style="position: relative; height: 220px;">
+                    <canvas id="analyticsPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px;">
+                <h6 class="text-muted mb-3 fw-semibold">Сводка операций</h6>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #f2f4f5;">
+                                <td class="text-secondary py-3">Общие Доходы</td>
+                                <td class="fw-bold text-end text-success" id="stats-income">0 ₽</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f2f4f5;">
+                                <td class="text-secondary py-3">Общие Расходы</td>
+                                <td class="fw-bold text-end text-danger" id="stats-expense">0 ₽</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f2f4f5;">
+                                <td class="text-secondary py-3">Чистый баланс</td>
+                                <td class="fw-bold text-end text-dark" id="stats-net">0 ₽</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let pieChartInstance = null;
+
+    async function loadAnalytics() {
+        try {
+            const response = await fetch('/api/analytics/');
+            const stats = await response.json(); // Возвращает {"income": X, "expense": Y} из вашего views.py
+
+            const income = parseFloat(stats.income) || 0;
+            const expense = parseFloat(stats.expense) || 0;
+            const net = income - expense;
+
+            // Наполняем текстовые поля на основе вычислений бэкенда
+            document.getElementById('stats-income').textContent = `${income.toLocaleString('ru-RU')} ₽`;
+            document.getElementById('stats-expense').textContent = `${expense.toLocaleString('ru-RU')} ₽`;
+            document.getElementById('stats-net').textContent = `${net.toLocaleString('ru-RU')} ₽`;
+
+            // Обновляем интерактивную диаграмму Chart.js
+            const ctx = document.getElementById('analyticsPieChart').getContext('2d');
+            
+            if (pieChartInstance) {
+                pieChartInstance.destroy();
+            }
+
+            if(income === 0 && expense === 0) {
+                ctx.clearRect(0, 0, 200, 200);
+                return;
+            }
+
+            pieChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Доходы', 'Расходы'],
+                    datasets: [{
+                        data: [income, expense],
+                        backgroundColor: ['#72d595', '#fc6f6f'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+        } catch (e) {
+            console.error("Ошибка обновления блока аналитики:", e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAnalytics);
+</script>
 {% endblock %}
