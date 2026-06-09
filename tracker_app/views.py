@@ -40,16 +40,19 @@ def logout_view(request):
 # ==========================================
 # 3. КОНТРОЛЛЕР ГЛАВНОЙ СТРАНИЦЫ (DASHBOARD)
 # ==========================================
-@login_required
+from decimal import Decimal
+
+
 def dashboard_view(request):
     user = request.user
 
     # ЦЕЛИ
     goals = Goal.objects.filter(owner=user)
     goals = sorted(goals, key=lambda g: g.progress_percent, reverse=True)[:3]
+
     # Счета пользователя
     accounts = Account.objects.filter(owner=user).order_by("-created_at")[:3]
-    total_balance = accounts.aggregate(Sum("balance"))["balance__sum"] or 0
+    total_balance = accounts.aggregate(Sum("balance"))["balance__sum"] or Decimal("0")
 
     # ТРАНЗАКЦИИ
     last_transactions = (
@@ -67,32 +70,31 @@ def dashboard_view(request):
         "Рестораны",
         "Другое",
     ]
+
     chart_data = []
 
     for cat in categories:
-        amount = (
-            Transaction.objects.filter(
-                owner=user, type=Transaction.Type.EXPENSE, category__name=cat
-            ).aggregate(Sum("amount"))["amount__sum"]
-            or 0
-        )
-        chart_data.append(float(amount))
-        # Я добавил тут
+        amount = Transaction.objects.filter(
+            owner=user, type=Transaction.Type.EXPENSE, category__name=cat
+        ).aggregate(Sum("amount"))["amount__sum"] or Decimal("0")
 
-    # План расходов на месяц из регулярных платежей
-    monthly_plan = (
-        Transaction.objects.filter(owner=user, type=Transaction.Type.EXPENSE).aggregate(
-            total=Sum("amount")
-        )
-    )["total"] or 0
+        chart_data.append(float(amount))
+
+    # План расходов на месяц
+    monthly_plan = Transaction.objects.filter(
+        owner=user, type=Transaction.Type.EXPENSE
+    ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
 
     service = FinanceService()
     stats = service.get_statistics(user)
-    expense = stats["expense"]
-    monthly_progress = min(round(expense / monthly_plan * 100), 100)
 
-    if monthly_plan > 0:
-        monthly_progress = min(round(expense / monthly_plan * 100), 100)
+    expense = stats["expense"] or Decimal("0")
+
+    if monthly_plan > Decimal("0"):
+        monthly_progress = min(round(expense / monthly_plan * Decimal("100")), 100)
+    else:
+        monthly_progress = 0
+
     context = {
         "accounts": accounts,
         "total_balance": total_balance,
@@ -104,6 +106,7 @@ def dashboard_view(request):
         "last_transactions": last_transactions,
         "monthly_progress": monthly_progress,
     }
+
     return render(request, "pages/dashboard.html", context)
 
 
