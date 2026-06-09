@@ -5,14 +5,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
 from api.services.finance_service import FinanceService
 from api.services.analytics_service import AnalyticsService
 from django.shortcuts import get_object_or_404
 from .models import AvailableBank, AvailableCategoryTemplate
 from django.db.models import Sum, Value, DecimalField
 from django.db.models.functions import Coalesce
-
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.authentication import SessionAuthentication
 # ---------------- AUTH ----------------
 
 class RegisterView(APIView):
@@ -105,56 +105,72 @@ class AccountView(APIView):
         return Response({"message": "Account deleted"},status=204)
 
 # ---------------- TRANSACTIONS ----------------
+class TransactionPagination(PageNumberPagination):
+    page_size = 10
 
 class TransactionView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication] 
 
     def get(self, request):
-        transactions = Transaction.objects.filter(owner=request.user)
+        queryset = Transaction.objects.filter(owner=request.user).order_by('-date', '-id')
 
-        serializer = TransactionSerializer(transactions,many=True, context={"request": request})
+        # === БЛОК ФИЛЬТРАЦИИ ===
+        month_param = request.query_params.get('month')
+        if month_param and '-' in month_param:
+            try:
+                year, month = month_param.split('-')
+                queryset = queryset.filter(date__year=year, date__month=month)
+            except (ValueError, TypeError):
+                pass 
 
+        category_param = request.query_params.get('category')
+        if category_param:
+            queryset = queryset.filter(category_id=category_param)
+
+        account_param = request.query_params.get('account')
+        if account_param:
+            queryset = queryset.filter(account_id=account_param)
+
+        search_param = request.query_params.get('search')
+        if search_param:
+            queryset = queryset.filter(description__icontains=search_param)
+
+        # === БЛОК ПАГИНАЦИИ ===
+        paginator = TransactionPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        
+        if page is not None:
+            serializer = TransactionSerializer(page, many=True, context={"request": request})
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = TransactionSerializer(queryset, many=True, context={"request": request})
         return Response(serializer.data)
 
     def post(self, request):
         service = FinanceService()
-
         try:
-            transaction = service.create_transaction(request.user,request.data)
-
-            serializer = TransactionSerializer(transaction,context={"request": request} )
-
-            return Response(serializer.data,status=status.HTTP_201_CREATED)
-
+            transaction = service.create_transaction(request.user, request.data)
+            serializer = TransactionSerializer(transaction, context={"request": request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": str(e)},status=400)
+            return Response({"error": str(e)}, status=400)
 
     def put(self, request, pk):
-
-        transaction = get_object_or_404(Transaction,pk=pk,owner=request.user )
-
+        transaction = get_object_or_404(Transaction, pk=pk, owner=request.user)
         service = FinanceService()
-
         try:
-
             transaction = service.update_transaction(transaction, request.data)
-
-            serializer = TransactionSerializer(transaction,context={"request": request})
+            serializer = TransactionSerializer(transaction, context={"request": request})
             return Response(serializer.data)
-
         except Exception as e:
-            return Response({"error": str(e)},status=400)
+            return Response({"error": str(e)}, status=400)
 
     def delete(self, request, pk):
-
-        transaction = get_object_or_404(Transaction,pk=pk,owner=request.user)
-
+        transaction = get_object_or_404(Transaction, pk=pk, owner=request.user)
         service = FinanceService()
-
         service.delete_transaction(transaction)
-
         return Response({"message": "Transaction deleted"}, status=204)
-
 
 # ---------------- CATEGORIES ----------------
 
