@@ -1,3 +1,4 @@
+from django.db.models.functions import TruncMonth
 from api.models import Account, Transaction, Category
 from api.serializers import AccountSerializer, TransactionSerializer, CategorySerializer, RegisterSerializer
 from rest_framework.views import APIView
@@ -13,6 +14,10 @@ from django.db.models import Sum, Value, DecimalField
 from django.db.models.functions import Coalesce
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authentication import SessionAuthentication
+from dateutil.relativedelta import relativedelta 
+from django.utils import timezone
+from datetime import timedelta
+
 # ---------------- AUTH ----------------
 
 class RegisterView(APIView):
@@ -219,10 +224,115 @@ class CategoryView(APIView):
 
 class AnalyticsView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication]
+
     def get(self, request):
-        service = FinanceService()
-        stats = service.get_statistics(request.user)
-        return Response(stats)
+        user = request.user
+        now = timezone.now().date()
+        
+        # Генерируем список последних 6 месяцев (от -5 до текущего)
+        months_list = [now - relativedelta(months=i) for i in range(5, -1, -1)]
+
+        # Словари для локализации
+        months_ru = {
+            1: 'Янв', 2: 'Фев', 3: 'Март', 4: 'Апр', 5: 'Май', 6: 'Июнь',
+            7: 'Июль', 8: 'Авг', 9: 'Сент', 10: 'Окт', 11: 'Ноя', 12: 'Дек'
+        }
+        months_ru_full = {
+            1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь',
+            7: 'Июль', 8: 'Август', 9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'
+        }
+
+        # Инициализируем чистую структуру (по дефолту везде нули)
+        raw_data = {
+            'EX': {m.strftime('%Y-%m'): 0.0 for m in months_list}, # Расходы
+            'IN': {m.strftime('%Y-%m'): 0.0 for m in months_list}  # Доходы
+        }
+
+        # Точка старта фильтрации базы данных (первый день самого старого месяца из 6)
+        start_date = months_list[0].replace(day=1)
+
+        # 1. Запрос агрегированных данных ИМЕННО с фильтрацией по владельцу и датам
+        monthly_stats = (
+            Transaction.objects.filter(owner=user, date__gte=start_date, date__lte=now)
+            .annotate(month=TruncMonth('date'))  # <-- ИСПРАВЛЕНО ЗДЕСЬ (просто TruncMonth)
+            .values('month', 'type')
+            .annotate(total_amount=Sum('amount'))
+            .order_by('month')
+        )
+
+        # Раскладываем агрегированные суммы по полочкам (EX к EX, IN к IN)
+        for entry in monthly_stats:
+            if not entry['month']:
+                continue
+            m_key = entry['month'].strftime('%Y-%m')
+            t_type = entry['type']  # 'EX' или 'IN'
+            if t_type in raw_data and m_key in raw_data[t_type]:
+                # Сохраняем абсолютное значение (без минусов для расходов)
+                raw_data[t_type][m_key] = float(abs(entry['total_amount'] or 0))
+
+        # 2. Запрос атомарных транзакций текущего месяца (для точных min / max)
+        current_month_start = now.replace(day=1)
+        current_month_txs = Transaction.objects.filter(
+            owner=user, 
+            date__gte=current_month_start, 
+            date__lte=now
+        ).values('type', 'amount')
+
+        # Распределяем отдельные операции текущего месяца по спискам
+        current_ops = {'EX': [], 'IN': []}
+        for tx in current_month_txs:
+            t_type = tx['type']
+            if t_type in current_ops:
+                current_ops[t_type].append(float(abs(tx['amount'] or 0)))
+
+        # Функция-сборщик датасета для конкретного типа ('EX' или 'IN')
+        def build_dataset_for_type(t_type):
+            chart_labels = []
+            chart_values = []
+            table_rows = []
+            prev_amount = None
+
+            for m in months_list:
+                m_key = m.strftime('%Y-%m')
+                amount = raw_data[t_type][m_key]
+
+                # Данные графиков
+                chart_labels.append(months_ru[m.month])
+                chart_values.append(amount)
+
+                # Расчет процентов разницы с прошлым месяцем
+                diff_pct = None
+                if prev_amount is not None:
+                    if prev_amount > 0:
+                        diff_val = amount - prev_amount
+                        diff_pct = round((diff_val / prev_amount) * 100)
+                    elif prev_amount == 0 and amount > 0:
+                        diff_pct = 100  # С нуля выросли на 100%
+
+                table_rows.append({
+                    'name': months_ru_full[m.month],
+                    'value': amount,
+                    'percentage': diff_pct
+                })
+                prev_amount = amount
+
+            # Возвращаем структуру, готовую к употреблению фронтендом
+            return {
+                'labels': chart_labels,
+                'values': chart_values,
+                'months': table_rows,
+                # Если транзакций нет, вернется пустой список [], и фронтенд запишет 0 по дефолту
+                'current_month_operations': current_ops[t_type] 
+            }
+
+        # Формируем итоговый ответ с разделением, которое ждет фронтенд
+        response_data = {
+            'expenses': build_dataset_for_type('EX'),
+            'incomes': build_dataset_for_type('IN')
+        }
+
+        return Response(response_data)
 
 
 # ---------------- FORECAST ----------------

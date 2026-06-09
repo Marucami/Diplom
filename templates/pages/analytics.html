@@ -7,97 +7,323 @@
 <div class="container my-4" style="font-family: 'Manrope', sans-serif;">
     <h1 class="h3 mb-4 fw-bold" style="color: #0b1a1e;">Аналитика</h1>
 
+    <div class="d-flex mb-4">
+        <div class="p-1 bg-white shadow-sm d-flex" style="border-radius: 16px; gap: 8px;">
+            <button id="btn-expense" class="btn btn-toggle active px-4 py-2 fw-bold" onclick="setMode('expense')">Расходы</button>
+            <button id="btn-income" class="btn btn-toggle px-4 py-2 fw-bold" onclick="setMode('income')">Доходы</button>
+        </div>
+    </div>
+
     <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px;">
-                <h6 class="text-muted mb-4 fw-semibold">Соотношение доходов и расходов</h6>
-                <div style="position: relative; height: 220px;">
-                    <canvas id="analyticsPieChart"></canvas>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 20px;">
+                <h6 class="text-secondary mb-4 fw-bold" id="chart-title">Расходы за последние полгода</h6>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="analyticsBarChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px;">
-                <h6 class="text-muted mb-3 fw-semibold">Сводка операций</h6>
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #f2f4f5;">
-                                <td class="text-secondary py-3">Общие Доходы</td>
-                                <td class="fw-bold text-end text-success" id="stats-income">0 ₽</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #f2f4f5;">
-                                <td class="text-secondary py-3">Общие Расходы</td>
-                                <td class="fw-bold text-end text-danger" id="stats-expense">0 ₽</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #f2f4f5;">
-                                <td class="text-secondary py-3">Чистый баланс</td>
-                                <td class="fw-bold text-end text-dark" id="stats-net">0 ₽</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 20px;">
+                <h5 class="card-title">Разница по месяцам</h5>
+                <div id="month-difference-list">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3" id="summary-blocks">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
+                <p class="text-muted small mb-1 fw-semibold" id="sum-label-avg">Средние расходы</p>
+                <h4 class="fw-bold mb-0" id="val-avg">0 ₽</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
+                <p class="text-muted small mb-1 fw-semibold" id="sum-label-max">Максимальные</p>
+                <h4 class="fw-bold mb-0" id="val-max">0 ₽</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
+                <p class="text-muted small mb-1 fw-semibold" id="sum-label-min">Минимальные</p>
+                <h4 class="fw-bold mb-0" id="val-min">0 ₽</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
+                <p class="text-muted small mb-1 fw-semibold" id="sum-label-total">Всего за период</p>
+                <h4 class="fw-bold mb-0" id="val-total">0 ₽</h4>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Стили кнопок-переключателей */
+    .btn-toggle {
+        border: none;
+        background: transparent;
+        color: #6c757d;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .btn-toggle.active {
+        background-color: #31888F !important;
+        color: white !important;
+        box-shadow: 0 4px 10px rgba(49, 136, 143, 0.2);
+    }
+    .btn-toggle:hover:not(.active) {
+        background-color: #f8f9fa;
+        color: #31888F;
+    }
+    
+    /* Убираем стандартные границы таблиц */
+    .table td {
+        border-bottom: 1px solid #f8f9fa;
+    }
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    let pieChartInstance = null;
+    let chartInstance = null;
+    let currentMode = 'expense';
+    let globalAnalyticsData = null; // Переменная для хранения ответа от API
 
-    async function loadAnalytics() {
+    // Функция для получения CSRF-токена из куки
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Обновленный метод запроса с авторизацией и CSRF защитой
+    async function authenticatedFetch(url, options = {}) {
+        const token = localStorage.getItem('access_token');
+        if (!options.headers) {
+            options.headers = {};
+        }
+        
+        if (token) {
+            options.headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        // Если метод запроса изменяет данные (POST, PUT, DELETE), добавляем CSRF-токен
+        if (options.method && options.method.toUpperCase() !== 'GET') {
+            const csrfToken = getCookie('csrftoken');
+            if (csrfToken) {
+                options.headers['X-CSRFToken'] = csrfToken;
+            }
+        }
+
+        let response = await fetch(url, options);
+        
+        if (response.status === 401) {
+            // Здесь ваш существующий код обновления токена (refresh token)...
+        }
+        
+        return response;
+    }
+
+    function formatCurrency(val) {
+        return new Intl.NumberFormat('ru-RU').format(val) + ' ₽';
+    }
+
+    // Главная функция: запрашивает данные один раз при загрузке страницы
+    async function loadAnalyticsFromServer() {
         try {
             const response = await fetch('/api/analytics/');
-            const stats = await response.json(); // Возвращает {"income": X, "expense": Y} из вашего views.py
-
-            const income = parseFloat(stats.income) || 0;
-            const expense = parseFloat(stats.expense) || 0;
-            const net = income - expense;
-
-            // Наполняем текстовые поля на основе вычислений бэкенда
-            document.getElementById('stats-income').textContent = `${income.toLocaleString('ru-RU')} ₽`;
-            document.getElementById('stats-expense').textContent = `${expense.toLocaleString('ru-RU')} ₽`;
-            document.getElementById('stats-net').textContent = `${net.toLocaleString('ru-RU')} ₽`;
-
-            // Обновляем интерактивную диаграмму Chart.js
-            const ctx = document.getElementById('analyticsPieChart').getContext('2d');
+            if (!response.ok) throw new Error('Ошибка при получении данных аналитики');
             
-            if (pieChartInstance) {
-                pieChartInstance.destroy();
-            }
+            // Сохраняем реальные данные от Django в глобальную переменную
+            globalAnalyticsData = await response.json();
 
-            if(income === 0 && expense === 0) {
-                ctx.clearRect(0, 0, 200, 200);
-                return;
-            }
-
-            pieChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Доходы', 'Расходы'],
-                    datasets: [{
-                        data: [income, expense],
-                        backgroundColor: ['#72d595', '#fc6f6f'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            });
+            // Отрисовываем интерфейс (по умолчанию активны Расходы)
+            updateUI();
 
         } catch (e) {
-            console.error("Ошибка обновления блока аналитики:", e);
+            console.error(e);
+            document.getElementById('summary-blocks').insertAdjacentHTML('beforebegin', 
+                `<div class="alert alert-danger" style="border-radius:12px;">Не удалось загрузить аналитику бэкенда</div>`
+            );
         }
     }
 
-    document.addEventListener('DOMContentLoaded', loadAnalytics);
+    function setMode(mode) {
+        currentMode = mode;
+        
+        // Переключаем кнопки
+        document.getElementById('btn-expense').classList.toggle('active', mode === 'expense');
+        document.getElementById('btn-income').classList.toggle('active', mode === 'income');
+
+        // Меняем динамические текстовые метки
+        const labelSuffix = mode === 'expense' ? 'расходы' : 'доходы';
+        document.getElementById('chart-title').textContent = mode === 'expense' ? 'Расходы за последние полгода' : 'Доходы за последние полгода';
+        document.getElementById('sum-label-avg').textContent = `Средние ${labelSuffix}`;
+        document.getElementById('sum-label-max').textContent = `Максимальные ${labelSuffix}`;
+        document.getElementById('sum-label-min').textContent = `Минимальные ${labelSuffix}`;
+
+        // Перерисовываем интерфейс под выбранный режим
+        updateUI();
+    }
+
+    function updateUI() {
+        // Проверка структуры приходящих данных
+        if (!globalAnalyticsData || !globalAnalyticsData[currentMode === 'expense' ? 'expenses' : 'incomes']) {
+            console.error("Данные аналитики неполные или имеют неверную структуру.");
+            return;
+        }
+
+        const currentData = currentMode === 'expense' 
+            ? globalAnalyticsData.expenses 
+            : globalAnalyticsData.incomes;
+
+        // --- 1. ЛЕВЫЙ БЛОК: Только график расходов/доходов ---
+        updateChart(currentData);
+
+        // --- 2. ПРАВЫЙ БЛОК: Вывод сумм по месяцам ---
+        const differenceContainer = document.getElementById('month-difference-list');
+        if (differenceContainer) {
+            differenceContainer.innerHTML = ''; // Очищаем старое
+
+            if (currentData.months && Array.isArray(currentData.months)) {
+                currentData.months.forEach((item) => {
+                    const formattedValue = formatCurrency(item.value);
+                    
+                    let trendHtml = '—';
+                    if (item.percentage !== null && item.percentage !== undefined) {
+                        const isExpense = currentMode === 'expense';
+                        // Для расходов: уменьшение (-%) — это хорошо (зеленый), увеличение (+%) — плохо (красный)
+                        // Для доходов: увеличение (+%) — это хорошо (зеленый), уменьшение (-%) — плохо (красный)
+                        const isPositiveTrend = isExpense ? (item.percentage < 0) : (item.percentage > 0);
+                        const colorClass = isPositiveTrend ? 'text-success' : 'text-danger';
+                        const sign = item.percentage > 0 ? '+' : '';
+                        
+                        trendHtml = `<span class="${colorClass}">${sign}${item.percentage}%</span>`;
+                    }
+
+                    const row = `
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-secondary">${item.name}</span>
+                            <div class="d-flex justify-content-end align-items-center" style="width: 60%;">
+                                <span class="font-weight-bold me-4">${formattedValue}</span>
+                                <span style="width: 55px; text-align: right;">${trendHtml}</span>
+                            </div>
+                        </div>
+                    `;
+                    differenceContainer.insertAdjacentHTML('beforeend', row);
+                });
+            }
+        }
+
+        // --- 3. НИЖНИЕ КАРТОЧКИ: Точные значения из страницы транзакций ---
+        const ops = currentData.current_month_operations || [];
+
+        let min = 0;
+        let max = 0;
+        // Всего за текущий месяц — это последний элемент из массива значений за полгода
+        let total = currentData.values ? currentData.values[currentData.values.length - 1] : 0; 
+        
+        if (ops.length > 0) {
+            // Берем точный минимум и максимум среди отдельных транзакций текущего месяца
+            min = Math.min(...ops);
+            max = Math.max(...ops);
+        } else {
+            // Если транзакций в этом месяце еще нет, берем исторический минимум/максимум из месяцев
+            const nonZeroValues = (currentData.values || []).filter(v => v > 0);
+            if (nonZeroValues.length > 0) {
+                min = Math.min(...nonZeroValues);
+                max = Math.max(...nonZeroValues);
+            }
+        }
+
+        // Расчет среднего арифметического (на основе месяцев, где были обороты)
+        const filledMonths = (currentData.values || []).filter(v => v > 0);
+        const totalHalfYear = filledMonths.reduce((sum, v) => sum + v, 0);
+        const avg = filledMonths.length > 0 ? (totalHalfYear / filledMonths.length) : 0;
+
+        // Выводим данные в ваши реальные элементы HTML (val-avg, val-max и т.д.)
+        document.getElementById('val-avg').textContent = formatCurrency(Math.round(avg));
+        document.getElementById('val-max').textContent = formatCurrency(max);
+        document.getElementById('val-min').textContent = formatCurrency(min);
+        document.getElementById('val-total').textContent = formatCurrency(total);
+    }
+
+    function updateChart(chartData) {
+        const canvasElement = document.getElementById('analyticsBarChart');
+        if (!canvasElement) return;
+
+        const ctx = canvasElement.getContext('2d');
+        
+        // Автоматически выбираем цвет: бирюзовый для расходов, зеленый для доходов
+        const barColor = currentMode === 'expense' ? '#31888F' : '#72d595';
+
+        // Уничтожаем старый график перед созданием нового, чтобы они не накладывались
+        if (chartInstance && typeof chartInstance.destroy === 'function') {
+            chartInstance.destroy();
+        }
+
+        // Вычисляем максимальное значение для красивого масштаба оси Y
+        const maxVal = Math.max(...chartData.values);
+        const yAxisMax = maxVal > 0 ? maxVal * 1.15 : 50000;
+
+        // Создаем новый график Chart.js, внедряя ваш конфиг и сетап
+        chartInstance = new Chart(canvasElement, {
+            type: 'bar', // Ваша настройка из config
+            data: {
+                labels: chartData.labels, // Динамические месяцы от бэкенда (например: ["Янв", "Фев"...])
+                datasets: [{
+                    data: chartData.values, // Динамические суммы от бэкенда (например: [0, 0, 0, 0, 0, 202])
+                    backgroundColor: barColor, // Однотонный цвет заливки
+                    borderRadius: 6,           // Красивое скругление колонок
+                    barThickness: 25           // Фиксированная толщина колонок
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false // Прячем легенду, так как у нас всего один датасет
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false // Убираем вертикальные сетки для чистоты дизайна
+                        }
+                    },
+                    y: {
+                        beginAtZero: true, // Ваша настройка из config
+                        max: yAxisMax,
+                        ticks: {
+                            // Форматируем числа на оси Y (например, 56000 превратится в 56K)
+                            callback: value => value === 0 ? '0' : (value >= 1000 ? value / 1000 + 'K' : value)
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Запуск при загрузке DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        loadAnalyticsFromServer();
+    });
 </script>
 {% endblock %}

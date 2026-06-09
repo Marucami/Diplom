@@ -197,11 +197,7 @@
                 <div class="brand-logo-placeholder"></div>
             </div>
             <div class="d-flex align-items-center">
-                <!-- Кнопка выхода -->
-                <a href="{% url 'logout' %}" id="logout-link" class="btn btn-sm btn-outline-light me-3"
-                    style="border-radius: 10px;">
-                    Выход
-                </a>
+                
                 <a href="#" class="me-3 d-inline-block">
 
                     <!-- СДЕЛАТЬ ВСПЛЫВАЮЩЕЕ ОКНО НАСТРОЕК ИЛИ? -->
@@ -221,6 +217,11 @@
                         <img src="{% static 'images/perrys_face.png' %}" class="header-avatar-icon" alt="User">
                     </div>
                 </div>
+                <!-- Кнопка выхода -->
+                <a href="{% url 'logout' %}" id="logout-link" class="btn btn-sm btn-outline-light ms-3"
+                    style="border-radius: 10px;">
+                    Выход
+                </a>
             </div>
         </div>
     </header>
@@ -234,39 +235,28 @@
     <footer class="fixed-footer shadow-lg">
         <div class="container" style="max-width: 900px; width: 100%;">
             <div class="d-flex justify-content-between align-items-center w-100">
-                <!-- Кнопка: Главная -->
-                <a href="{% url 'dashboard' %}" class="footer-nav-link active">
+                <!-- Кнопка: Счета -->
+                <a href="{% url 'dashboard' %}" class="footer-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <img src="{% static 'icons/home1.png' %}" class="footer-icon" alt="">
                     <span>Главная</span>
                 </a>
 
-                <!-- СДЕЛАТЬ VIEWS & URLS ДЛЯ КАЖДОЙ СТРАНИЦЫ И ПОДКЛЮЧИТЬ  -->
-
-
-                <!-- Кнопка: Счета -->
-                <a href="{% url 'accounts' %}" class="footer-nav-link">
-                    <!-- <a href="{ % url 'bank_accounts' % }" class="footer-nav-link"> -->
+                <a href="{% url 'accounts' %}" class="footer-nav-link {% if request.resolver_match.url_name == 'accounts' %}active{% endif %}">
                     <img src="{% static 'icons/wallet1.png' %}" class="footer-icon" alt="">
                     <span>Счета</span>
                 </a>
 
-                <!-- Кнопка: Цели -->
-                <a href="{% url 'categories' %}" class="footer-nav-link">
-                    <!-- <a href="{ % url 'categories' % }" class="footer-nav-link"> -->
+                <a href="{% url 'categories' %}" class="footer-nav-link {% if request.resolver_match.url_name == 'categories' %}active{% endif %}">
                     <img src="{% static 'icons/category1.png' %}" class="footer-icon" alt="">
                     <span>Категории и цели</span>
                 </a>
 
-                <!-- Кнопка: Аналитика -->
-                <a href="{% url 'analytics' %}" class="footer-nav-link">
-                    <!-- <a href="{ % url 'analytics' % }" class="footer-nav-link"> -->
+                <a href="{% url 'analytics' %}" class="footer-nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
                     <img src="{% static 'icons/anal1.png' %}" class="footer-icon" alt="">
                     <span>Аналитика</span>
                 </a>
 
-                <!-- Кнопка: Транзакции -->
-                <a href="{% url 'transactions' %}" class="footer-nav-link">
-                    <!-- <a href="{ % url 'transactions' % }" class="footer-nav-link"> -->
+                <a href="{% url 'transactions' %}" class="footer-nav-link {% if request.resolver_match.url_name == 'transactions' %}active{% endif %}">
                     <img src="{% static 'icons/re1.png' %}" class="footer-icon" alt="">
                     <span>Транзакции</span>
                 </a>
