@@ -20,7 +20,10 @@
                 <p class="text-muted text-uppercase fw-semibold mb-1"
                     style="font-size: 0.72rem; letter-spacing: 0.05em;">Общий баланс</p>
                 <h3 class="fw-bold text-dark mb-2"> {{ total_balance }} ₽</h3>
-                <a href="#" class="text-decoration-none small fw-medium text-info mt-auto">Все счета</a>
+                <a href="{% url 'accounts' %}"
+                    class="text-center text-decoration-none small fw-medium text-info mt-auto">
+                    Все счета
+                </a>
             </div>
         </div>
 
@@ -49,12 +52,11 @@
                 <p class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.72rem;">План расходов на месяц
                 </p>
                 <div class="d-flex justify-content-between align-items-baseline mb-2">
-                    <h5 class="fw-bold text-dark mb-0">87 000 <span class="text-muted fs-6 fw-normal">/ 100 000 ₽</span>
-                    </h5>
-                    <span class="text-info fw-bold small">87%</span>
+                    <h5 class="fw-bold text-dark mb-0">{{ monthly_plan }} ₽</h5>
+                    <span class="text-info fw-bold small">{{ monthly_progress }}%</span>
                 </div>
                 <div class="progress" style="height: 6px;">
-                    <div class="progress-bar bg-info" role="progressbar" style="width: 87%"></div>
+                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ monthly_progress }}%"></div>
                 </div>
             </div>
         </div>
@@ -71,22 +73,28 @@
 
                     <!-- Цикл проходит по всем реальным счетам из базы данных -->
                     {% for account in accounts %}
-                    <div class="d-flex align-items-center justify-content-between p-2 mb-2"
-                        style="background-color: #f4f9fb; border-radius: 8px;">
-                        <div class="d-flex align-items-center">
-                            <img src="{% static 'icons/wallet.png' %}" class="ui-icon me-3" alt="">
+                    <div class="d-flex align-items-center justify-content-between px-2 py-2 mb-2">
+
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Цветной кружок (можно задать цвет через поле модели) -->
+                            <div
+                                style="width: 36px; height: 36px; border-radius: 50%; background-color: {% cycle '#f5c542' '#e8333a' '#4a90d9' '#2d9e6b' %};">
+                            </div>
+
                             <div>
-                                <!-- Название счета из базы -->
-                                <p class="text-muted mb-0" style="font-size: 0.7rem; line-height: 1.2;">{{
-                                    account.name}}</p>
-                                <!-- Баланс счета из базы -->
-                                <p class="mb-0 small font-weight-bold text-dark">{{ account.balance }} {{
-                                    account.currency }}</p>
+                                <p class="mb-0 text-dark"
+                                    style="font-size: 0.82rem; font-weight: 500; line-height: 1.3;">
+                                    {{ account.name }}
+                                </p>
+                                <p class="mb-0 text-dark fw-bold" style="font-size: 0.9rem; line-height: 1.3;">
+                                    {{ account.balance }} <span style="font-weight: 400;"> {{ account.currency }}
+                                    </span>
+                                </p>
                             </div>
                         </div>
-                        <!-- Последние 4 цифры или ID (зависит от того, есть ли такое поле у вас в модели) -->
-                        <span class="badge badge-danger p-2 font-mono" style="font-size: 0.75rem;">id: {{ account.id
-                            }}</span>
+                        <span style="font-size: 0.95rem; font-weight: 700; color: #1a1a1a; white-space: nowrap;">
+                            {{account.bank}}
+                        </span>
                     </div>
                     {% empty %}
                     <!-- Если у пользователя еще нет ни одного счета -->
@@ -96,7 +104,8 @@
                     {% endfor %}
 
                 </div>
-                <a href="#" class="text-center text-decoration-none small fw-medium text-info mt-auto">Все счета</a>
+                <a href="{% url 'accounts' %}"
+                    class="text-center text-decoration-none small fw-medium text-info mt-auto">Все счета</a>
             </div>
         </div>
 
@@ -255,26 +264,37 @@
                             +</button>
                     </div>
                     <div class="d-flex flex-column gap-3">
-                        {% for i in "123"|make_list %}
-                        <div>
-                            <div class="d-flex justify-content-between align-items-center small mb-1"
-                                style="font-size: 0.75rem;">
-                                <!-- Ваша иконка travel вместо стандартного самолетика -->
-                                <span class="text-dark fw-medium d-flex align-items-center gap-1">
-                                    <img src="{% static 'icons/travel.png' %}" style="width: 16px; height: 16px;"
-                                        alt=""> Отпуск
+                        {% for goal in goals %}
+                        <div class="mb-3">
+
+                            <div class="d-flex justify-content-between mb-2">
+
+                                <span>
+                                    {{ goal.name }}
                                 </span>
-                                <span class="text-muted">75 000 / 100 000 ₽</span>
-                                <span class="fw-bold text-info">75%</span>
+
+                                <span>
+                                    {{ goal.current_amount }} /
+                                    {{ goal.target_amount }} ₽
+                                </span>
+
+                                <span>
+                                    {{ goal.progress_percent }}%
+                                </span>
+
                             </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-info" role="progressbar" style="width: 75%"></div>
+
+                            <div class="progress">
+                                <div class="progress-bar" style="width: {{ goal.progress_percent }}%">
+                                </div>
                             </div>
+
                         </div>
                         {% endfor %}
                     </div>
                 </div>
-                <a href="#" class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Все цели</a>
+                <a href="{% url 'categories' %}"
+                    class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Все цели</a>
             </div>
         </div>
     </div>
@@ -288,27 +308,49 @@
                 <div>
                     <h5 class="fw-bold text-dark mb-3">Последние транзакции</h5>
                     <div class="list-group list-group-flush">
-                        <div
-                            class="list-group-item px-0 d-flex justify-content-between align-items-center small py-2.5 border-light">
+                        {% for transaction in last_transactions %}
+
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+
                             <div class="d-flex align-items-center gap-3">
-                                <span class="text-muted" style="width: 65px;">Сегодня</span>
-                                <span class="badge bg-success-subtle text-success rounded-pill px-2.5">Продукты</span>
-                                <span class="text-secondary">Тинькофф</span>
+
+                                <span class="text-muted">
+                                    {{ transaction.date }}
+                                </span>
+
+                                <span class="badge rounded-pill bg-light text-dark border">
+
+                                    {% if transaction.category %}
+                                    {{ transaction.category.name }}
+                                    {% else %}
+                                    Без категории
+                                    {% endif %}
+
+                                </span>
+
+                                <span class="text-secondary">
+                                    {{ transaction.account.name }}
+                                </span>
+
                             </div>
-                            <span class="fw-bold text-danger">- 1 460 ₽</span>
+
+                            {% if transaction.type == 'EX' %}
+                            <span class="fw-bold text-danger">
+                                - {{ transaction.amount }} ₽
+                            </span>
+                            {% else %}
+                            <span class="fw-bold text-success">
+                                + {{ transaction.amount }} ₽
+                            </span>
+                            {% endif %}
+
                         </div>
-                        <div
-                            class="list-group-item px-0 d-flex justify-content-between align-items-center small py-2.5 border-0">
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="text-muted" style="width: 65px;">Сегодня</span>
-                                <span class="badge bg-info-subtle text-info rounded-pill px-2.5">Зарплата</span>
-                                <span class="text-secondary">Тинькофф</span>
-                            </div>
-                            <span class="fw-bold text-success">+ 70 000 ₽</span>
-                        </div>
+
+                        {% endfor %}
                     </div>
                 </div>
-                <a href="#" class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Вся
+                <a href="{% url 'transactions' %}"
+                    class="text-center text-decoration-none text-info small fw-medium mt-3 d-block">Вся
                     история</a>
             </div>
         </div>

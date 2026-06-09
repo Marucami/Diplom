@@ -5,9 +5,12 @@ from django.core.validators import MinValueValidator
 from rest_framework import serializers
 import os
 
+
 class Account(models.Model):
     name = models.CharField(max_length=100)
-    bank = models.ForeignKey('AvailableBank', on_delete=models.SET_NULL, null=True, blank=True)
+    bank = models.ForeignKey(
+        "AvailableBank", on_delete=models.SET_NULL, null=True, blank=True
+    )
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     currency = models.CharField(max_length=3, default="RUB")
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
@@ -32,22 +35,26 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=2, choices=Type.choices, default=Type.BOTH)
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    
-    target_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=0)
-    
-    status = models.CharField(max_length=2, choices=Status.choices, default=Status.ACTIVE)
+
+    target_amount = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True, default=0
+    )
+
+    status = models.CharField(
+        max_length=2, choices=Status.choices, default=Status.ACTIVE
+    )
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories")
     created_at = models.DateTimeField(auto_now_add=True)
     deadline = models.DateField(null=True, blank=True)
 
     template = models.ForeignKey(
-        'AvailableCategoryTemplate', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name="categories"
+        "AvailableCategoryTemplate",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="categories",
     )
-    
+
     def __str__(self):
         return self.name
 
@@ -71,25 +78,27 @@ class Transaction(models.Model):
         EXPENSE = "EX", "Расход"
 
     amount = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        validators=[MinValueValidator(0.01)]
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0.01)]
     )
     date = models.DateField()
     description = models.CharField(max_length=255, blank=True)
     type = models.CharField(max_length=2, choices=Type.choices)
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="transactions")
+    account = models.ForeignKey(
+        Account, on_delete=models.CASCADE, related_name="transactions"
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="transactions"
+        related_name="transactions",
     )
     tags = models.ManyToManyField(Tag, blank=True, related_name="transactions")
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transactions")
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="transactions"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -108,7 +117,9 @@ class RecurringTransaction(models.Model):
     type = models.CharField(max_length=2, choices=Transaction.Type.choices)
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     frequency = models.CharField(max_length=1, choices=Frequency.choices)
     next_date = models.DateField()
@@ -124,7 +135,9 @@ class RecurringTransaction(models.Model):
 class Goal(models.Model):
     name = models.CharField(max_length=100)
     target_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="goals")
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name="goals"
+    )
 
     deadline = models.DateField(null=True, blank=True)
 
@@ -149,7 +162,9 @@ class Goal(models.Model):
 
 
 class Budget(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="budgets")
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name="budgets"
+    )
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     month = models.DateField()
 
@@ -171,7 +186,9 @@ class Notification(models.Model):
         RECURRING = "RC", "Регулярный платёж"
         OTHER = "OT", "Другое"
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="notifications"
+    )
     type = models.CharField(max_length=2, choices=Type.choices, default=Type.OTHER)
     title = models.CharField(max_length=200, blank=True, null=True)
     message = models.TextField()
@@ -182,13 +199,15 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.get_type_display()} ({self.user})"
-    
-    
-# ЗАПОЛНЯТЬ ЧЕРЕЗ АДМИНКУ :(    
+
+
+# ЗАПОЛНЯТЬ ЧЕРЕЗ АДМИНКУ :(
 class AvailableBank(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название банка")
-    color_hex = models.CharField(max_length=7, default="#ffffff", verbose_name="Цвет (HEX)")
-    
+    color_hex = models.CharField(
+        max_length=7, default="#ffffff", verbose_name="Цвет (HEX)"
+    )
+
     class Meta:
         verbose_name = "Доступный банк"
         verbose_name_plural = "Доступные банки"
@@ -198,26 +217,40 @@ class AvailableBank(models.Model):
 
 
 def category_icon_upload_path(instance, filename):
-    ext = filename.split('.')[-1]
+    ext = filename.split(".")[-1]
     # Используем имя категории для сохранения, очистив от лишних пробелов
-    safe_name = "".join([c for c in instance.name if c.isalpha() or c.isdigit()]).rstrip()
-    return os.path.join('category_icons', f"{safe_name}.{ext}")
+    safe_name = "".join(
+        [c for c in instance.name if c.isalpha() or c.isdigit()]
+    ).rstrip()
+    return os.path.join("category_icons", f"{safe_name}.{ext}")
+
 
 class AvailableCategoryTemplate(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="Название шаблона")
-    
+    name = models.CharField(
+        max_length=100, unique=True, verbose_name="Название шаблона"
+    )
+
     TYPE_CHOICES = [
         ("EX", "Ежемесячные траты / Накопления"),
         ("GL", "Бессрочная цель"),
         ("IN", "Доход"),
     ]
-    type = models.CharField(max_length=2, choices=TYPE_CHOICES, default="EX", verbose_name="Тип по умолчанию")
-    
+    type = models.CharField(
+        max_length=2,
+        choices=TYPE_CHOICES,
+        default="EX",
+        verbose_name="Тип по умолчанию",
+    )
+
     # Поле цвета (HEX) — совпадает с тем, что ожидает фронтенд (t.color_hex)
-    color_hex = models.CharField(max_length=7, default="#2c8a93", verbose_name="Цвет темы (HEX)")
-    
+    color_hex = models.CharField(
+        max_length=7, default="#2c8a93", verbose_name="Цвет темы (HEX)"
+    )
+
     # Оставляем строку, но в админке сделаем выпадающий список
-    icon_name = models.CharField(max_length=100, default="wallet1.png", verbose_name="Имя файла иконки")
+    icon_name = models.CharField(
+        max_length=100, default="wallet1.png", verbose_name="Имя файла иконки"
+    )
 
     class Meta:
         verbose_name = "Шаблон категории"
