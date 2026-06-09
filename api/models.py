@@ -1,9 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.conf import settings
 from django.core.validators import MinValueValidator
-from rest_framework import serializers
 import os
+from decimal import Decimal
 
 
 class Account(models.Model):
@@ -150,15 +149,20 @@ class Goal(models.Model):
 
     @property
     def current_amount(self):
-        return self.category.balance if self.category else 0
+        if not self.category or self.category.balance is None:
+            return Decimal("0")
 
-    @property
+        return max(Decimal("0"), self.category.balance)
+
     def progress_percent(self):
-        if not self.target_amount:
+        if not self.target_amount or self.target_amount <= Decimal("0"):
             return 0
 
-        progress = (self.current_amount / self.target_amount) * 100
-        return min(100, int(progress))
+        current = self.current_amount or Decimal("0")
+
+        progress = (current / self.target_amount) * Decimal("100")
+
+        return max(0, min(100, int(progress)))
 
 
 class Budget(models.Model):

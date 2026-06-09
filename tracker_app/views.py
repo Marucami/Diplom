@@ -3,7 +3,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from api.models import Account, Transaction, Goal, RecurringTransaction
+from decimal import Decimal
+from api.models import Account, Transaction, Goal
 from api.services.finance_service import FinanceService
 
 
@@ -40,9 +41,7 @@ def logout_view(request):
 # ==========================================
 # 3. КОНТРОЛЛЕР ГЛАВНОЙ СТРАНИЦЫ (DASHBOARD)
 # ==========================================
-from decimal import Decimal
-
-
+@login_required
 def dashboard_view(request):
     user = request.user
 
@@ -52,7 +51,9 @@ def dashboard_view(request):
 
     # Счета пользователя
     accounts = Account.objects.filter(owner=user).order_by("-created_at")[:3]
-    total_balance = accounts.aggregate(Sum("balance"))["balance__sum"] or Decimal("0")
+    total_balance = Account.objects.filter(owner=user).aggregate(Sum("balance"))[
+        "balance__sum"
+    ] or Decimal("0")
 
     # ТРАНЗАКЦИИ
     last_transactions = (
