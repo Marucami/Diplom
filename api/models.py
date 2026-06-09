@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from rest_framework import serializers
+import os
 
 class Account(models.Model):
     name = models.CharField(max_length=100)
@@ -20,6 +22,7 @@ class Category(models.Model):
         INCOME = "IN", "Доход"
         EXPENSE = "EX", "Расход"
         BOTH = "BO", "Оба"
+        GOAL = "GL", "Бессрочная цель"
 
     class Status(models.TextChoices):
         ACTIVE = "AC", "Активная"
@@ -29,10 +32,22 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=2, choices=Type.choices, default=Type.BOTH)
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    target_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=0)
+    
     status = models.CharField(max_length=2, choices=Status.choices, default=Status.ACTIVE)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories")
     created_at = models.DateTimeField(auto_now_add=True)
+    deadline = models.DateField(null=True, blank=True)
 
+    template = models.ForeignKey(
+        'AvailableCategoryTemplate', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name="categories"
+    )
+    
     def __str__(self):
         return self.name
 
@@ -171,10 +186,9 @@ class Notification(models.Model):
     
 # ЗАПОЛНЯТЬ ЧЕРЕЗ АДМИНКУ :(    
 class AvailableBank(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="Название банка")
-    color = models.CharField(max_length=20, default="#2c8a93", verbose_name="Цвет (HEX)")
-    logo_name = models.CharField(max_length=100, default="default_bank.png", verbose_name="Файл иконки")
-
+    name = models.CharField(max_length=100, verbose_name="Название банка")
+    color_hex = models.CharField(max_length=7, default="#ffffff", verbose_name="Цвет (HEX)")
+    
     class Meta:
         verbose_name = "Доступный банк"
         verbose_name_plural = "Доступные банки"
@@ -183,11 +197,27 @@ class AvailableBank(models.Model):
         return self.name
 
 
+def category_icon_upload_path(instance, filename):
+    ext = filename.split('.')[-1]
+    # Используем имя категории для сохранения, очистив от лишних пробелов
+    safe_name = "".join([c for c in instance.name if c.isalpha() or c.isdigit()]).rstrip()
+    return os.path.join('category_icons', f"{safe_name}.{ext}")
+
 class AvailableCategoryTemplate(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="Название категории")
-    type = models.CharField(max_length=2, choices=[("IN", "Доход"), ("EX", "Расход"), ("BO", "Оба")], default="BO")
-    color = models.CharField(max_length=20, default="#2c8a93", verbose_name="Цвет темы")
-    icon_name = models.CharField(max_length=100, default="wallet1.png", verbose_name="Файл иконки")
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название шаблона")
+    
+    TYPE_CHOICES = [
+        ("EX", "Ежемесячные траты / Накопления"),
+        ("GL", "Бессрочная цель"),
+        ("IN", "Доход"),
+    ]
+    type = models.CharField(max_length=2, choices=TYPE_CHOICES, default="EX", verbose_name="Тип по умолчанию")
+    
+    # Поле цвета (HEX) — совпадает с тем, что ожидает фронтенд (t.color_hex)
+    color_hex = models.CharField(max_length=7, default="#2c8a93", verbose_name="Цвет темы (HEX)")
+    
+    # Оставляем строку, но в админке сделаем выпадающий список
+    icon_name = models.CharField(max_length=100, default="wallet1.png", verbose_name="Имя файла иконки")
 
     class Meta:
         verbose_name = "Шаблон категории"

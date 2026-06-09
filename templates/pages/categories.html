@@ -6,14 +6,30 @@
 {% block content %}
 <div class="container my-4" style="font-family: 'Manrope', sans-serif;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 fw-bold" style="color: #0b1a1e;">Категории</h1>
+        <h1 class="h3 mb-0 fw-bold" style="color: #0b1a1e;">Категории и цели</h1>
         <button class="btn text-white px-4 py-2" style="background-color: #2c8a93; border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
             Добавить категорию +
         </button>
     </div>
 
-    <div class="row g-4" id="categories-container">
-        <div class="text-center py-5 text-muted">Загрузка ваших финансовых категорий и бюджетов...</div>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="p-1 mb-2">
+                <h4 class="h5 fw-bold text-secondary mb-3">Ежемесячные траты и накопления</h4>
+            </div>
+            <div class="row g-3" id="expenses-container">
+                <div class="text-center py-4 text-muted">Загрузка трат...</div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="p-1 mb-2">
+                <h4 class="h5 fw-bold text-secondary mb-3">Бессрочные цели</h4>
+            </div>
+            <div class="row g-3" id="goals-container">
+                <div class="text-center py-4 text-muted">Загрузка целей...</div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -27,6 +43,14 @@
             <form id="add-category-form">
                 <div class="modal-body py-4">
                     {% csrf_token %}
+                    
+                    <div id="template-preview-wrapper" class="text-center mb-4 d-none">
+                        <div id="preview-circle" class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px; transition: all 0.3s ease;">
+                            <img id="preview-icon" src="" style="width: 32px; height: 32px; object-fit: contain;">
+                        </div>
+                        <div class="mt-2 small fw-bold text-muted" id="preview-badge-text">Превью значка</div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">Вариант категории</label>
                         <select class="form-select" id="modal-category-template-select" style="border-radius: 10px;" required>
@@ -35,8 +59,21 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Тип назначения</label>
+                        <select class="form-select" name="category_type" id="modal-category-type" style="border-radius: 10px;" required>
+                            <option value="EX" selected>Ежемесячные траты / Накопления</option>
+                            <option value="GL">Бессрочная цель</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">Сумма бюджета / Цели (₽)</label>
-                        <input type="number" step="0.01" class="form-control" name="target_amount" placeholder="Например: 15000" style="border-radius: 10px;">
+                        <input type="number" step="0.01" class="form-control" id="modal-target-amount-input" name="target_amount" placeholder="Например: 15000" style="border-radius: 10px;" required>
+                    </div>
+                    
+                    <div class="mb-3" id="deadline-wrapper">
+                        <label class="form-label small fw-bold text-secondary">Крайний срок пополнения (Дедлайн)</label>
+                        <input type="date" class="form-control" id="modal-deadline-input" name="deadline" style="border-radius: 10px;">
                     </div>
 
                     <div class="modal-footer border-0 p-0 mt-4">
@@ -52,160 +89,284 @@
 
 {% block extra_js %}
 <script>
-    const container = document.getElementById('categories-container');
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
-    // 1. Отображаем карточки с индивидуальной цветовой схемой и иконкой из шаблона
+    const expensesContainer = document.getElementById('expenses-container');
+    const goalsContainer = document.getElementById('goals-container');
+
+    // 1. Отображение карточек с разделением по двум столбцам
     async function fetchUserCategories() {
         try {
             const response = await fetch('/api/categories/');
             if (!response.ok) throw new Error('Ошибка связи с сервером');
             const categories = await response.json();
             
-            container.innerHTML = '';
+            expensesContainer.innerHTML = '';
+            goalsContainer.innerHTML = '';
             
             if (categories.length === 0) {
-                container.innerHTML = '<div class="text-center py-5 text-muted">Категорий не обнаружено. Нажмите кнопку выше для добавления.</div>';
+                const emptyHtml = '<div class="text-center py-5 text-muted">Категорий не обнаружено. Создайте первую категорию.</div>';
+                expensesContainer.innerHTML = emptyHtml;
+                goalsContainer.innerHTML = emptyHtml;
                 return;
             }
 
+            let hasExpenses = false;
+            let hasGoals = false;
+            
             categories.forEach(cat => {
-                const currentAmount = parseFloat(cat.balance) || 0;
-                // Защита от деления на 0: если target_amount равен 0 или отсутствует, берем 1
-                const targetAmount = parseFloat(cat.target_amount) || 20000; 
+                // Приведение к числам (защита от null/undefined/пустых строк)
+                const currentAmount = parseFloat(cat.balance) || 0; 
+                const targetAmount = parseFloat(cat.target_amount) || 0; 
                 
-                const percent = Math.min(100, Math.round((currentAmount / targetAmount) * 100));
-                
-                // Берем цвет и иконку из шаблона, либо ставим базовые, если шаблон не привязан
+                // Процент прогресса
+                const percent = targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
                 const color = cat.template_color || '#2c8a93';
-                const icon = cat.template_icon || 'wallet1.png';
+                
+                let icon = cat.template_icon || 'wallet1.png';
+                if (!icon.startsWith('/static/')) {
+                    icon = `/static/icons/${icon}`;
+                }
+                
+                const isGoal = (cat.type === 'GL' || cat.is_goal === true);
+                
+                let infoText = '';
+
+                // --- НОВАЯ СТРОГАЯ ЛОГИКА СТАТУСОВ ---
+                if (isGoal) {
+                    // Если цель не задана или равна 0
+                    if (targetAmount <= 0) {
+                        infoText = `<span class="text-muted">Укажите целевую сумму</span>`;
+                    }
+                    // Цель достигнута только тогда, когда собрано >= targetAmount И цель реально существует (>0)
+                    else if (currentAmount >= targetAmount) {
+                        infoText = `<span class="text-success fw-bold">Цель успешно достигнута! 🎉</span>`;
+                    } 
+                    // Сбор в процессе
+                    else {
+                        const remaining = targetAmount - currentAmount;
+                        infoText = `Осталось накопить: <span class="fw-bold text-dark">${Number(remaining).toLocaleString('ru-RU')} ₽</span>`;
+                    }
+                } else {
+                    // Для ежемесячных трат проверяем наличие дедлайна
+                    if (cat.deadline) {
+                        const deadlineDate = new Date(cat.deadline);
+                        const today = new Date();
+                        
+                        deadlineDate.setHours(0,0,0,0);
+                        today.setHours(0,0,0,0);
+                        
+                        const diffTime = deadlineDate - today;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        const formattedDate = deadlineDate.toLocaleDateString('ru-RU');
+
+                        if (diffDays < 0) {
+                            infoText = `<span class="text-danger fw-bold">Срок оплаты истек (${formattedDate}) ⚠️</span>`;
+                        } else if (diffDays <= 25) {
+                            infoText = `Пополнить до <span class="fw-bold text-warning">${formattedDate}</span> (Осталось: ${diffDays} дн.)`;
+                        } else {
+                            infoText = `Срок оплаты: <span class="fw-bold">${formattedDate}</span>`;
+                        }
+                    } else {
+                        // Если дедлайна нет, проверяем превышение лимита
+                        if (targetAmount > 0 && currentAmount > targetAmount) {
+                            infoText = `<span class="text-danger fw-bold">Превышен лимит! ⚠️</span>`;
+                        } else if (targetAmount > 0) {
+                            const remaining = targetAmount - currentAmount;
+                            infoText = `Можно потратить: <span class="fw-bold text-dark">${Number(remaining).toLocaleString('ru-RU')} ₽</span>`;
+                        } else {
+                            infoText = `<span class="text-muted">Лимит не установлен</span>`;
+                        }
+                    }
+                }
 
                 const cardHtml = `
-                    <div class="col-md-4">
-                        <div class="card h-100 border-0 shadow-sm p-4" style="border-radius: 16px; border-top: 4px solid ${color} !important; background-color: #ffffff;">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px; background-color: #ffffff; transition: transform 0.2s;">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div class="d-flex align-items-center">
-                                    <div class="p-3 me-3 d-flex align-items-center justify-content-center" style="background-color: ${color}15; border-radius: 50%; width: 48px; height: 48px;">
-                                        <img src="/static/icons/${icon}" style="width: 20px;">
+                                    <div class="p-3 me-3 d-flex align-items-center justify-content-center" style="background-color: ${color}18; border-radius: 50%; width: 52px; height: 52px;">
+                                        <img src="${icon}" style="width: 24px; height: 24px; object-fit: contain;" onerror="this.src='/static/icons/wallet1.png'">
                                     </div>
                                     <div>
-                                        <h5 class="card-title mb-0 fw-semibold" style="color: ${color};">${cat.name}</h5>
+                                        <h5 class="card-title mb-0 fw-bold text-dark" style="font-size: 1.1rem;">${cat.name}</h5>
+                                        <div class="small mt-1 text-muted">${infoText}</div>
                                     </div>
                                 </div>
-                                <button onclick="deleteCategory(${cat.id})" class="btn btn-sm text-muted p-0 border-0 opacity-50 fs-4" style="line-height: 1;">&times;</button>
+                                <button onclick="deleteCategory(${cat.id})" class="btn btn-sm btn-link text-decoration-none text-muted p-0 border-0 opacity-50 fs-4" style="line-height: 1;">&times;</button>
                             </div>
                             
                             <div class="mt-2">
-                                <p class="mb-1 fw-bold fs-5" style="color: #0b1a1e;">
-                                    ${Number(currentAmount).toLocaleString('ru-RU')} / ${Number(targetAmount).toLocaleString('ru-RU')} ₽
-                                </p>
-                                <div class="progress" style="height: 8px; border-radius: 4px; background-color: #f0f4f5;">
-                                    <div class="progress-bar" role="progressbar" style="width: ${percent}%; background-color: ${color}; border-radius: 4px;"></div>
+                                <div class="d-flex justify-content-between mb-1 small text-secondary">
+                                    <span>Накоплено/Потрачено: <span class="fw-bold text-dark">${Number(currentAmount).toLocaleString('ru-RU')} ₽</span></span>
+                                    <span>Цель/Лимит: <span class="fw-bold" style="color: ${color};">${Number(targetAmount).toLocaleString('ru-RU')} ₽</span></span>
                                 </div>
-                                <div class="d-flex justify-content-between mt-1 text-muted small">
-                                    <span>Накоплено</span>
-                                    <span class="fw-bold" style="color: ${color};">${percent}%</span>
+                                <div class="progress" style="height: 8px; border-radius: 10px; background-color: #f0f4f5;">
+                                    <div class="progress-bar" role="progressbar" style="width: ${percent}%; background-color: ${color}; border-radius: 10px; transition: width 0.6s ease;"></div>
+                                </div>
+                                <div class="text-end mt-1 small fw-bold" style="color: ${color}; font-size: 0.8rem;">
+                                    Выполнено ${percent}%
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
-                container.insertAdjacentHTML('beforeend', cardHtml);
+
+                if (isGoal) {
+                    goalsContainer.insertAdjacentHTML('beforeend', cardHtml);
+                    hasGoals = true;
+                } else {
+                    expensesContainer.insertAdjacentHTML('beforeend', cardHtml);
+                    hasExpenses = true;
+                }
             });
+
+            if (!hasExpenses) expensesContainer.innerHTML = '<div class="text-center py-4 text-muted small">Нет текущих лимитов трат.</div>';
+            if (!hasGoals) goalsContainer.innerHTML = '<div class="text-center py-4 text-muted small">Нет бессрочных целей.</div>';
+
         } catch (err) {
-            container.innerHTML = `<div class="text-center py-5 text-danger">${err.message}</div>`;
+            expensesContainer.innerHTML = `<div class="text-center py-4 text-danger">${err.message}</div>`;
+            goalsContainer.innerHTML = `<div class="text-center py-4 text-danger">${err.message}</div>`;
         }
     }
 
-    // Функция динамической подгрузки категорий из админки
-async function loadAvailableCategoryTemplates() {
-    try {
-        const response = await fetch('/api/available-categories/');
-        if (!response.ok) throw new Error('Ошибка загрузки шаблонов');
-        const templates = await response.json();
-        
-        const select = document.getElementById('modal-category-template-select');
-        if (select) {
-            select.innerHTML = '<option value="">Выберите шаблон</option>';
-            templates.forEach(t => {
-                select.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.name}</option>`);
-            });
+    // 2. Динамическая подгрузка шаблонов
+    async function loadAvailableCategoryTemplates() {
+        try {
+            const response = await fetch('/api/available-categories/');
+            if (!response.ok) throw new Error('Ошибка загрузки шаблонов');
+            const templates = await response.json();
+            
+            const select = document.getElementById('modal-category-template-select');
+            if (select) {
+                select.innerHTML = '<option value="" data-color="#2c8a93" data-icon="/static/icons/wallet1.png">Выберите шаблон</option>';
+                templates.forEach(t => {
+                    select.insertAdjacentHTML('beforeend', `
+                        <option value="${t.id}" data-color="${t.color_hex || '#2c8a93'}" data-icon="${t.icon || '/static/icons/wallet1.png'}">
+                            ${t.name}
+                        </option>
+                    `);
+                });
+            }
+        } catch (e) {
+            console.error('Не удалось подгрузить шаблоны:', e);
         }
-    } catch (e) {
-        console.error('Не удалось подгрузить шаблоны:', e);
-    }
-}
-
-// Обработчик отправки формы категорий
-document.getElementById('add-category-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const selectTemplate = document.getElementById('modal-category-template-select');
-    const targetAmountInput = this.querySelector('[name="target_amount"]');
-
-    let finalCategoryName = "";
-    if (selectTemplate && selectTemplate.value !== "") {
-        finalCategoryName = selectTemplate.options[selectTemplate.selectedIndex].text;
     }
 
-    if (!finalCategoryName) {
-        alert('Пожалуйста, выберите шаблон категории.');
-        return;
-    }
+    // 3. Динамическая смена превью и скрытие дедлайна для целей
+    const templateSelect = document.getElementById('modal-category-template-select');
+    const previewWrapper = document.getElementById('template-preview-wrapper');
+    const previewCircle = document.getElementById('preview-circle');
+    const previewIcon = document.getElementById('preview-icon');
+    const categoryTypeSelect = document.getElementById('modal-category-type');
+    const deadlineWrapper = document.getElementById('deadline-wrapper');
 
-    const payload = {
-        name: finalCategoryName,
-        target_amount: targetAmountInput && targetAmountInput.value ? targetAmountInput.value : "0",
-        status: "AC", 
-        type: "EX"    
-    };
+    if (templateSelect) {
+        templateSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (this.value && this.value !== "") {
+                const color = selectedOption.dataset.color;
+                const iconUrl = selectedOption.dataset.icon;
 
-    try {
-        const response = await fetch('/api/categories/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-            bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
-            this.reset();
-            fetchCategories(); // Перерисовка карточек на странице
-        } else {
-            const err = await response.json();
-            alert('Ошибка бэкенда: ' + JSON.stringify(err));
-        }
-    } catch (error) {
-        console.error(error);
-    }
-});
-
-
-    // Логика показа/скрытия кастомного инпута
-    const catTemplateSelect = document.getElementById('modal-category-template-select');
-    const customCatWrapper = document.getElementById('custom-category-name-wrapper');
-    const customCatInput = document.getElementById('custom-category-name-input');
-
-    if (catTemplateSelect) {
-        catTemplateSelect.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                customCatWrapper.classList.remove('d-none');
-                customCatInput.setAttribute('required', 'required');
+                previewWrapper.classList.remove('d-none');
+                previewCircle.style.backgroundColor = color + "25"; 
+                previewCircle.style.border = `2px solid ${color}`;
+                previewIcon.src = iconUrl;
             } else {
-                customCatWrapper.classList.add('d-none');
-                customCatInput.removeAttribute('required');
-                customCatInput.value = '';
+                previewWrapper.classList.add('d-none');
             }
         });
     }
 
+    if (categoryTypeSelect && deadlineWrapper) {
+        categoryTypeSelect.addEventListener('change', function() {
+            if (this.value === 'GL') {
+                deadlineWrapper.classList.add('d-none');
+                document.getElementById('modal-deadline-input').value = '';
+            } else {
+                deadlineWrapper.classList.remove('d-none');
+            }
+        });
+    }
 
-    // 4. Функция удаления категории
+    // 4. Обработчик отправки формы
+    document.getElementById('add-category-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const selectTemplate = document.getElementById('modal-category-template-select');
+        const targetAmountInput = document.getElementById('modal-target-amount-input');
+        const typeSelect = document.getElementById('modal-category-type'); 
+        const deadlineInput = document.getElementById('modal-deadline-input');
+
+        let finalCategoryName = "";
+        if (selectTemplate && selectTemplate.value !== "") {
+            finalCategoryName = selectTemplate.options[selectTemplate.selectedIndex].text.trim();
+        }
+
+        if (!finalCategoryName) {
+            alert('Пожалуйста, выберите шаблон категории.');
+            return;
+        }
+
+        const payload = {
+            name: finalCategoryName,
+            template_id: parseInt(selectTemplate.value, 10),
+            target_amount: targetAmountInput && targetAmountInput.value ? parseFloat(targetAmountInput.value) : 0,
+            status: "AC", 
+            type: typeSelect ? typeSelect.value : "EX",
+            deadline: deadlineInput && deadlineInput.value ? deadlineInput.value : null
+        };
+
+        try {
+            const response = await fetch('/api/categories/', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const modalEl = document.getElementById('addCategoryModal');
+                bootstrap.Modal.getInstance(modalEl).hide();
+                this.reset();
+                if (previewWrapper) previewWrapper.classList.add('d-none');
+                await fetchUserCategories(); 
+            } else {
+                const err = await response.json();
+                alert('Ошибка создания категории: ' + JSON.stringify(err));
+            }
+        } catch (error) {
+            console.error('Ошибка сети:', error);
+        }
+    });
+
+    // 5. Функция удаления категории
     async function deleteCategory(id) {
         if (!confirm('Вы уверены, что хотите удалить эту категорию?')) return;
         try {
-            const response = await fetch(`/api/categories/${id}/`, { method: 'DELETE' });
+            const response = await fetch(`/api/categories/${id}/`, { 
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('cookies') ? getCookie('csrftoken') : getCookie('csrftoken')
+                }
+            });
             if (response.ok) {
-                fetchUserCategories(); // Обновляем список после успешного удаления
+                await fetchUserCategories(); 
             } else {
                 alert('Не удалось удалить категорию.');
             }
@@ -214,10 +375,10 @@ document.getElementById('add-category-form').addEventListener('submit', async fu
         }
     }
 
-    // 5. Инициализация страницы после полной загрузки DOM
+    // Инициализация при старте DOM
     document.addEventListener('DOMContentLoaded', () => {
-        fetchUserCategories();     // Загружаем карточки пользователя
-        loadAvailableCategoryTemplates();   // Загружаем шаблоны для модального окна
+        fetchUserCategories();     
+        loadAvailableCategoryTemplates();   
     });
 </script>
 {% endblock %}

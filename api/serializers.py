@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from .models import (
     Account, Category, Tag,
     Transaction, RecurringTransaction,
-    Goal, Budget, Notification
+    Goal, Budget, Notification, AvailableCategoryTemplate
 )
 
 
@@ -110,29 +110,20 @@ class CategorySerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source="get_type_display", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     
-    # Поля для чтения оформления из шаблона
-    template_color = serializers.ReadOnlyField(source='template.color')
-    template_icon = serializers.ReadOnlyField(source='template.icon_name')
+    template_color = serializers.SerializerMethodField()
+    template_icon = serializers.SerializerMethodField()
     
-    # Поле для записи ID шаблона при создании категории через POST-запрос
     template_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    
+    target_amount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, default=0)
+    balance = serializers.DecimalField(source="total_balance", max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = Category
         fields = (
-            "id",
-            "name",
-            "type",
-            "type_display",
-            "balance",
-            "status",
-            "status_display",
-            "owner",
-            "owner_username",
-            "created_at",
-            "template_color",  
-            "template_icon",   
-            "template_id",     
+            "id", "name", "type", "type_display", "balance", "status",
+            "status_display", "owner", "owner_username", "created_at",
+            "template_color", "template_icon", "template_id", "target_amount", "deadline"    
         )
         
         read_only_fields = (
@@ -143,14 +134,38 @@ class CategorySerializer(serializers.ModelSerializer):
             "status_display",
             "created_at",
         )
+    
+    def get_template_color(self, obj):
+        return obj.template.color_hex if obj.template else '#2c8a93'
+    
+    def get_template_icon(self, obj):
+        if obj.template:
+            return f"/static/icons/{obj.template.icon_name}"
+        return '/static/icons/wallet1.png'
 
     def create(self, validated_data):
-        # Логика сохранения template_id в модель Category
         template_id = validated_data.pop('template_id', None)
+        target_amount = validated_data.get('target_amount', 0)
+        owner = validated_data.get('owner')
+        
         category = Category.objects.create(**validated_data)
+        
         if template_id:
-            category.template_id = template_id
-            category.save()
+            try:
+                template = AvailableCategoryTemplate.objects.get(id=template_id)
+                category.template = template
+                category.save()
+            except AvailableCategoryTemplate.DoesNotExist:
+                pass
+
+        if category.type == "GL" and target_amount > 0:
+            Goal.objects.create(
+                name=category.name,
+                target_amount=target_amount,
+                category=category,
+                owner=owner
+            )
+
         return category
 
 
@@ -289,3 +304,13 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = "__all__"
         read_only_fields = ("user",)
+        
+class AvailableCategoryTemplateSerializer(serializers.ModelSerializer):
+    icon = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AvailableCategoryTemplate
+        fields = ['id', 'name', 'type', 'color_hex', 'icon']
+
+    def get_icon(self, obj):
+        return f"/static/icons/{obj.icon_name}"

@@ -10,6 +10,8 @@ from api.services.finance_service import FinanceService
 from api.services.analytics_service import AnalyticsService
 from django.shortcuts import get_object_or_404
 from .models import AvailableBank, AvailableCategoryTemplate
+from django.db.models import Sum, Value, DecimalField
+from django.db.models.functions import Coalesce
 
 # ---------------- AUTH ----------------
 
@@ -160,7 +162,13 @@ class CategoryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        categories = Category.objects.filter(owner=request.user)
+        categories = Category.objects.filter(owner=request.user).annotate(
+            total_balance=Coalesce(
+                Sum('transactions__amount'), 
+                Value(0.0), 
+                output_field=DecimalField()
+            )
+        )
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data)
 
@@ -232,12 +240,23 @@ class MeView(APIView):
 class AvailableBanksListView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        data = AvailableBank.objects.all().values('id', 'name', 'color', 'logo_name')
+        data = AvailableBank.objects.all().values('id', 'name', 'color_hex')
         return Response(list(data))
 
 # Эндпоинт для выпадающего списка категорий
 class AvailableCategoriesListView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        data = AvailableCategoryTemplate.objects.all().values('id', 'name', 'type', 'color', 'icon_name')
-        return Response(list(data))
+        templates = AvailableCategoryTemplate.objects.all()
+        
+        serialized_data = []
+        for t in templates:
+            serialized_data.append({
+                "id": t.id,
+                "name": t.name,
+                "type": t.type,
+                "color_hex": t.color_hex,
+                "icon": f"/static/icons/{t.icon_name}"  
+            })
+            
+        return Response(serialized_data)
