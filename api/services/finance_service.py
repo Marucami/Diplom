@@ -1,21 +1,14 @@
 from decimal import Decimal
-
 from django.db.models import Sum
-
-from api.models import Transaction, Account, Category
+from datetime import date, timedelta
+from api.models import Transaction, Account, Category, RecurringTransaction
 
 
 class FinanceService:
 
     def create_transaction(self, user, data):
 
-        required_fields = [
-            "amount",
-            "category_id",
-            "type",
-            "date",
-            "account_id"
-        ]
+        required_fields = ["amount", "category_id", "type", "date", "account_id"]
 
         for field in required_fields:
             if field not in data:
@@ -28,7 +21,7 @@ class FinanceService:
             account_id=data["account_id"],
             type=data["type"],
             date=data["date"],
-            description=data.get("description", "")
+            description=data.get("description", ""),
         )
 
         self.apply_transaction(transaction)
@@ -41,9 +34,9 @@ class FinanceService:
 
         transaction.amount = Decimal(data.get("amount", transaction.amount))
 
-        transaction.type = data.get("type",transaction.type)
+        transaction.type = data.get("type", transaction.type)
 
-        transaction.description = data.get("description",transaction.description)
+        transaction.description = data.get("description", transaction.description)
 
         transaction.date = data.get("date", transaction.date)
 
@@ -119,26 +112,54 @@ class FinanceService:
 
     def get_statistics(self, user):
 
-        income_sum = (
-            Transaction.objects.filter(
-                owner=user,
-                type=Transaction.Type.INCOME
-            ).aggregate(
-                total=Sum("amount")
-            )["total"] or Decimal("0")
-        )
+        income_sum = Transaction.objects.filter(
+            owner=user, type=Transaction.Type.INCOME
+        ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
 
-        expense_sum = (
-            Transaction.objects.filter(
-                owner=user,
-                type=Transaction.Type.EXPENSE
-            ).aggregate(
-                total=Sum("amount")
-            )["total"] or Decimal("0")
-        )
+        expense_sum = Transaction.objects.filter(
+            owner=user, type=Transaction.Type.EXPENSE
+        ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
 
         return {
             "income": income_sum,
             "expense": expense_sum,
-            "balance": income_sum - expense_sum
+            "balance": income_sum - expense_sum,
         }
+
+    def process_recurring_transactions(self):
+
+        today = date.today()
+
+        recurring_list = RecurringTransaction.objects.filter(
+            is_active=True, next_date__lte=today
+        )
+
+        for recurring in recurring_list:
+
+            self.create_transaction(
+                recurring.owner,
+                {
+                    "amount": recurring.amount,
+                    "category_id": (
+                        recurring.category.id if recurring.category else None
+                    ),
+                    "account_id": recurring.account.id,
+                    "type": recurring.type,
+                    "date": today,
+                    "description": f"Автоплатёж: {recurring.name}",
+                },
+            )
+
+            if recurring.frequency == RecurringTransaction.Frequency.DAILY:
+                recurring.next_date += timedelta(days=1)
+
+            elif recurring.frequency == RecurringTransaction.Frequency.WEEKLY:
+                recurring.next_date += timedelta(days=7)
+
+            elif recurring.frequency == RecurringTransaction.Frequency.MONTHLY:
+                recurring.next_date += timedelta(days=30)
+
+            elif recurring.frequency == RecurringTransaction.Frequency.YEARLY:
+                recurring.next_date += timedelta(days=365)
+
+            recurring.save()
