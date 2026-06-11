@@ -6,6 +6,7 @@ from django.db.models import Sum
 from decimal import Decimal
 from api.models import Account, Transaction, Goal
 from api.services.finance_service import FinanceService
+from api.services.recurring_service import RecurringTransactionService
 
 
 # ==========================================
@@ -43,11 +44,13 @@ def logout_view(request):
 # ==========================================
 @login_required
 def dashboard_view(request):
+    RecurringTransactionService.process_due_transactions()
+
     user = request.user
 
     # ЦЕЛИ
     goals = Goal.objects.filter(owner=user)
-    goals = sorted(goals, key=lambda g: g.progress_percent, reverse=True)[:3]
+    goals = sorted(goals, key=lambda g: g.progress_percent(), reverse=True)[:3]
 
     # Счета пользователя
     accounts = Account.objects.filter(owner=user).order_by("-created_at")[:3]
