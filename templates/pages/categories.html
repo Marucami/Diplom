@@ -144,6 +144,7 @@
                 const isGoal = (cat.type === 'GL' || cat.is_goal === true);
                 
                 let infoText = '';
+                let isOverLimit = false;
 
                 // --- НОВАЯ СТРОГАЯ ЛОГИКА СТАТУСОВ ---
                 if (isGoal) {
@@ -161,11 +162,16 @@
                         infoText = `Осталось накопить: <span class="fw-bold text-dark">${Number(remaining).toLocaleString('ru-RU')} ₽</span>`;
                     }
                 } else {
-                    // Для ежемесячных трат проверяем наличие дедлайна
-                    if (cat.deadline) {
+                    // Проверка превышения лимита для Ежемесячных трат
+                    isOverLimit = targetAmount > 0 && currentAmount > targetAmount;
+
+                    if (isOverLimit) {
+                        const overage = currentAmount - targetAmount;
+                        // Яркое предупреждение о превышении
+                        infoText = `<span class="text-danger fw-bold">⚠️ Превышен лимит на ${Number(overage).toLocaleString('ru-RU')} ₽!</span>`;
+                    } else if (cat.deadline) {
                         const deadlineDate = new Date(cat.deadline);
                         const today = new Date();
-                        
                         deadlineDate.setHours(0,0,0,0);
                         today.setHours(0,0,0,0);
                         
@@ -181,10 +187,7 @@
                             infoText = `Срок оплаты: <span class="fw-bold">${formattedDate}</span>`;
                         }
                     } else {
-                        // Если дедлайна нет, проверяем превышение лимита
-                        if (targetAmount > 0 && currentAmount > targetAmount) {
-                            infoText = `<span class="text-danger fw-bold">Превышен лимит! ⚠️</span>`;
-                        } else if (targetAmount > 0) {
+                        if (targetAmount > 0) {
                             const remaining = targetAmount - currentAmount;
                             infoText = `Можно потратить: <span class="fw-bold text-dark">${Number(remaining).toLocaleString('ru-RU')} ₽</span>`;
                         } else {
@@ -193,9 +196,14 @@
                     }
                 }
 
+                // Динамическая стилизация карточки при превышении
+                const cardBorderClass = isOverLimit ? 'border border-danger border-2' : 'border-0';
+                const cardBgColor = isOverLimit ? '#fff5f5' : '#ffffff';
+                const progressBarColor = isOverLimit ? '#dc3545' : color;
+
                 const cardHtml = `
                     <div class="col-12">
-                        <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px; background-color: #ffffff; transition: transform 0.2s;">
+                        <div class="card ${cardBorderClass} shadow-sm p-4 h-100" style="border-radius: 16px; background-color: ${cardBgColor}; transition: transform 0.2s;">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div class="d-flex align-items-center">
                                     <div class="p-3 me-3 d-flex align-items-center justify-content-center" style="background-color: ${color}18; border-radius: 50%; width: 52px; height: 52px;">
@@ -211,14 +219,14 @@
                             
                             <div class="mt-2">
                                 <div class="d-flex justify-content-between mb-1 small text-secondary">
-                                    <span>Накоплено/Потрачено: <span class="fw-bold text-dark">${Number(currentAmount).toLocaleString('ru-RU')} ₽</span></span>
+                                    <span>Накоплено/Потрачено: <span class="fw-bold ${isOverLimit ? 'text-danger' : 'text-dark'}">${Number(currentAmount).toLocaleString('ru-RU')} ₽</span></span>
                                     <span>Цель/Лимит: <span class="fw-bold" style="color: ${color};">${Number(targetAmount).toLocaleString('ru-RU')} ₽</span></span>
                                 </div>
                                 <div class="progress" style="height: 8px; border-radius: 10px; background-color: #f0f4f5;">
-                                    <div class="progress-bar" role="progressbar" style="width: ${percent}%; background-color: ${color}; border-radius: 10px; transition: width 0.6s ease;"></div>
+                                    <div class="progress-bar" role="progressbar" style="width: ${percent}%; background-color: ${progressBarColor}; border-radius: 10px; transition: width 0.6s ease;"></div>
                                 </div>
-                                <div class="text-end mt-1 small fw-bold" style="color: ${color}; font-size: 0.8rem;">
-                                    Выполнено ${percent}%
+                                <div class="text-end mt-1 small fw-bold" style="color: ${progressBarColor}; font-size: 0.8rem;">
+                                    Выполнено ${isOverLimit ? '>100' : percent}%
                                 </div>
                             </div>
                         </div>

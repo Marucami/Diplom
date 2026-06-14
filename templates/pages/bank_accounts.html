@@ -30,19 +30,19 @@
             </table>
         </div>
     </div>
-
-    <div class="card border-0 shadow-sm p-4 rounded-4 mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold mb-0" id="chart-title">Динамика доступных средств</h5>
-            <div class="btn-group btn-group-sm" role="group" aria-label="Периоды">
-                <button type="button" onclick="changePeriod('week')" id="btn-week" class="btn btn-outline-secondary active">Неделя</button>
-                <button type="button" onclick="changePeriod('month')" id="btn-month" class="btn btn-outline-secondary">Месяц</button>
-                <button type="button" onclick="changePeriod('year')" id="btn-year" class="btn btn-outline-secondary">Год</button>
+        <div class="card border-0 shadow-sm p-4 rounded-4 mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0" id="chart-title">Динамика доступных средств</h5>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Периоды">
+                    <button type="button" onclick="changePeriod('week')" id="btn-week" class="btn btn-outline-secondary active">Неделя</button>
+                    <button type="button" onclick="changePeriod('month')" id="btn-month" class="btn btn-outline-secondary">Месяц</button>
+                    <button type="button" onclick="changePeriod('year')" id="btn-year" class="btn btn-outline-secondary">Год</button>
+                </div>
+            </div>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="accountsChart"></canvas>
             </div>
         </div>
-        <div style="position: relative; height: 300px; width: 100%;">
-        </div>
-    </div>
 </div>
 
 <div class="modal fade" id="addAccountModal" tabindex="-1" aria-hidden="true">
@@ -149,7 +149,7 @@
                         </td>
                         <td class="text-secondary fw-medium" style="color: ${bankColor} !important;">${bankDisplay}</td>
                         <td>${acc.currency}</td>
-                        <td class="fw-bold">${Number(acc.balance).toLocaleString('ru-RU')} ₽</td>
+                        <td class="fw-bold">${Number(acc.balance).toLocaleString('ru-RU')}</td>
                         <td class="text-end px-4">
                             <button onclick="deleteAccount(${acc.id})" class="btn btn-sm btn-link text-danger text-decoration-none p-0 border-0">Удалить</button>
                         </td>
