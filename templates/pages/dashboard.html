@@ -264,23 +264,125 @@
 
 {% block extra_js %}
 <script>
+    let myChart;
+
+    // 1. Функция отрисовки диаграммы
+    function renderChart(dataArray) {
+        const canvasElement = document.getElementById('categoriesChart');
+        if (!canvasElement) return;
+
+        // Удаляем старый инстанс, если он есть
+        if (myChart instanceof Chart) {
+            myChart.destroy();
+        }
+
+        // Обновляем текстовые значения под графиком
+        const totalExpenses = dataArray.reduce((a, b) => a + b, 0) || 1;
+        dataArray.forEach((val, idx) => {
+            const pct = totalExpenses > 0 ? Math.round((val / totalExpenses) * 100) : 0;
+            const container = document.getElementById(`cat-val-${idx}`);
+            if (container) {
+                container.textContent = `${val.toLocaleString('ru-RU')} ₽ (${pct}%)`;
+            }
+        });
+
+        // Создаем новый график
+        myChart = new Chart(canvasElement, {
+            type: 'doughnut',
+            data: {
+                labels: ['Продукты', 'Транспорт', 'Развлечения', 'Жильё', 'Рестораны', 'Цели'],
+                datasets: [{
+                    data: dataArray,
+                    backgroundColor: ['#4ade80', '#22d3ee', '#facc15', '#a78bfa', '#f87171', '#6F5BA8'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    borderRadius: 4,
+                    cutout: '72%'
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: true } }
+            }
+        });
+    }
+
+    // 2. Основная функция загрузки данных
+    async function loadDashboardSummary() {
+        // --- ЗАГРУЗКА ЦЕЛЕЙ ---
+        let totalGoalsBalance = 0;
+        try {
+            const catRes = await fetch('/api/categories/');
+            if (catRes.ok) {
+                const data = await catRes.json();
+                const categories = Array.isArray(data) ? data : (data.results || []);
+                const goals = categories.filter(cat => cat.type === 'GL' || cat.is_goal === true);
+                
+                totalGoalsBalance = goals.reduce((sum, goal) => sum + (parseFloat(goal.balance) || 0), 0);
+                
+                const goalsContainer = document.getElementById('dashboard-goals-container');
+                goalsContainer.innerHTML = goals.length === 0 ? '<div class="text-muted small">У вас пока нет активных целей.</div>' : '';
+                
+                goals.slice(0, 2).forEach(cat => {
+                    const current = parseFloat(cat.balance) || 0;
+                    const target = parseFloat(cat.target_amount) || 0;
+                    const percent = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+                    const color = cat.template_color || '#2c8a93';
+                    const icon = (cat.template_icon && !cat.template_icon.startsWith('/')) ? `/static/icons/${cat.template_icon}` : (cat.template_icon || '/static/icons/wallet1.png');
+
+                    goalsContainer.insertAdjacentHTML('beforeend', `
+                        <div class="d-flex align-items-center p-3 rounded-3 border mb-2">
+                            <div class="me-3 d-flex align-items-center justify-content-center" style="background: ${color}18; border-radius: 50%; width: 42px; height: 42px;">
+                                <img src="${icon}" style="width: 20px; height: 20px;" onerror="this.src='/static/icons/wallet1.png'">
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-bold small">${cat.name}</span>
+                                    <span class="small fw-bold" style="color: ${color};">${current.toLocaleString('ru-RU')} ₽</span>
+                                </div>
+                                <div class="progress" style="height: 6px;"><div class="progress-bar" style="width: ${percent}%; background: ${color};"></div></div>
+                            </div>
+                        </div>`);
+                });
+            }
+        } catch (e) { console.error('Ошибка целей:', e); }
+
+        // --- ЗАГРУЗКА ТРАНЗАКЦИЙ ---
+        try {
+            const txRes = await fetch('/api/transactions/');
+            if (txRes.ok) {
+                const data = await txRes.json();
+                const txs = Array.isArray(data) ? data : (data.results || []);
+                const txContainer = document.getElementById('dashboard-transactions-container');
+                txContainer.innerHTML = txs.length === 0 ? '<div class="text-muted small">Нет транзакций.</div>' : '';
+                
+                txs.slice(0, 2).forEach(tx => {
+                    txContainer.insertAdjacentHTML('beforeend', `
+                        <div class="d-flex justify-content-between border-bottom py-2">
+                            <div><div class="fw-bold small">${tx.category_name || 'Транзакция'}</div><div class="text-muted" style="font-size:0.75rem">${new Date(tx.date).toLocaleDateString()}</div></div>
+                            <div class="fw-bold ${tx.type === 'IN' ? 'text-success' : 'text-dark'}">${tx.type === 'IN' ? ' + ' : ' - '}${parseFloat(tx.amount).toLocaleString()} ₽</div>
+                        </div>`);
+                });
+            }
+        } catch (e) { console.error('Ошибка транзакций:', e); }
+
+        // --- ОБНОВЛЕНИЕ ДИАГРАММЫ ---
+        const rawData = JSON.parse(document.getElementById('chart-data-json').textContent || "[0,0,0,0,0,0]");
+        rawData[5] = totalGoalsBalance;
+        renderChart(rawData);
+    }
+
+    // 3. Инициализация при загрузке
     document.addEventListener("DOMContentLoaded", function () {
-        // --- СИНХРОНИЗАЦИЯ И ЛОГИКА ПЛАНА РАСХОДОВ ---
         const currentExpense = parseFloat("{{ expense|default:0 }}".replace(/\s/g, '')) || 0;
         let savedPlan = localStorage.getItem('monthly_expense_plan') || 100000;
 
         function updateExpensePlanUI(planValue) {
             const percentage = planValue > 0 ? Math.min(Math.round((currentExpense / planValue) * 100), 100) : 0;
-            
-            document.getElementById('plan-expenses-text').innerHTML = 
-                `${currentExpense.toLocaleString('ru-RU')} <span class="text-muted fs-6 fw-normal">/ ${parseInt(planValue).toLocaleString('ru-RU')} ₽</span>`;
+            document.getElementById('plan-expenses-text').innerHTML = `${currentExpense.toLocaleString('ru-RU')} <span class="text-muted fs-6 fw-normal">/ ${parseInt(planValue).toLocaleString('ru-RU')} ₽</span>`;
             document.getElementById('plan-percentage-text').textContent = `${percentage}%`;
-            
-            const progressBar = document.getElementById('plan-progress-bar');
-            if (progressBar) {
-                progressBar.style.width = `${percentage}%`;
-                progressBar.className = percentage >= 100 ? "progress-bar bg-danger" : "progress-bar bg-info";
-            }
+            document.getElementById('plan-progress-bar').style.width = `${percentage}%`;
             document.getElementById('planAmountInput').value = planValue;
         }
 
@@ -289,152 +391,11 @@
             const newPlan = document.getElementById('planAmountInput').value;
             localStorage.setItem('monthly_expense_plan', newPlan);
             updateExpensePlanUI(newPlan);
-            
-            const modalEl = document.getElementById('editPlanModal');
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) modalInstance.hide();
+            bootstrap.Modal.getInstance(document.getElementById('editPlanModal')).hide();
         });
 
         updateExpensePlanUI(savedPlan);
-
-        // --- ИНИЦИАЛИЗАЦИЯ ДИАГРАММЫ И АВТОМАТИЧЕСКИЙ ВЫВОД РАСХОДОВ ---
-        if (typeof Chart !== 'undefined') {
-            const canvasElement = document.getElementById('categoriesChart');
-
-            if (canvasElement) {
-                const rawData = document.getElementById('chart-data-json').textContent;
-                const parsedChartData = rawData ? JSON.parse(rawData) : [0, 0, 0, 0, 0, 0];
-
-                // Динамический расчет сумм и процентов для текстового блока под график
-                const totalExpenses = parsedChartData.reduce((a, b) => a + b, 0) || 1;
-                parsedChartData.forEach((val, idx) => {
-                    const pct = totalExpenses > 1 ? Math.round((val / totalExpenses) * 100) : 0;
-                    const container = document.getElementById(`cat-val-${idx}`);
-                    if (container) {
-                        container.textContent = `${val.toLocaleString('ru-RU')} ₽ (${pct}%)`;
-                    }
-                });
-
-                new Chart(canvasElement, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Продукты', 'Транспорт', 'Развлечения', 'Жильё', 'Рестораны', 'Другое'],
-                        datasets: [{
-                            data: parsedChartData,
-                            backgroundColor: ['#4ade80', '#22d3ee', '#facc15', '#a78bfa', '#f87171', '#9ca3af'],
-                            borderWidth: 2,
-                            borderColor: '#ffffff',
-                            borderRadius: 4,
-                            cutout: '72%'
-                        }]
-                    },
-                    options: {
-                        responsive: false,
-                        maintainAspectRatio: false,
-                        circumference: 360,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: true }
-                        }
-                    }
-                });
-            }
-        }
-    });
-
-    async function loadDashboardSummary() {
-        // --- 1. Загрузка целей (последние 3) ---
-        try {
-            const catRes = await fetch('/api/categories/');
-            if (catRes.ok) {
-                const data = await catRes.json();
-                const categories = Array.isArray(data) ? data : (data.results || []);
-                
-                const goals = categories.filter(cat => cat.type === 'GL' || cat.is_goal === true);
-                const goalsContainer = document.getElementById('dashboard-goals-container');
-                goalsContainer.innerHTML = '';
-
-                if (goals.length === 0) {
-                    goalsContainer.innerHTML = '<div class="text-muted small">У вас пока нет активных целей.</div>';
-                } else {
-                    // ИСПРАВЛЕНО: берем только 3 последних
-                    goals.slice(0, 2).forEach(cat => {
-                        const currentAmount = parseFloat(cat.balance) || 0; 
-                        const targetAmount = parseFloat(cat.target_amount) || 0; 
-                        const percent = targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
-                        const color = cat.template_color || '#2c8a93';
-                        
-                        let icon = cat.template_icon || 'wallet1.png';
-                        if (!icon.startsWith('/static/')) icon = `/static/icons/${icon}`;
-
-                        goalsContainer.insertAdjacentHTML('beforeend', `
-                            <div class="d-flex align-items-center p-3 rounded-3 border" style="background-color: #ffffff; border-color: #f0f4f5 !important;">
-                                <div class="me-3 d-flex align-items-center justify-content-center flex-shrink-0" style="background-color: ${color}18; border-radius: 50%; width: 42px; height: 42px;">
-                                    <img src="${icon}" style="width: 20px; height: 20px; object-fit: contain;" onerror="this.src='/static/icons/wallet1.png'">
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="fw-bold small text-dark">${cat.name}</span>
-                                        <span class="small fw-bold" style="color: ${color};">${Number(currentAmount).toLocaleString('ru-RU')} ₽</span>
-                                    </div>
-                                    <div class="progress" style="height: 6px; border-radius: 10px; background-color: #f0f4f5;">
-                                        <div class="progress-bar" style="width: ${percent}%; background-color: ${color}; border-radius: 10px;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        `);
-                    });
-                }
-            }
-        } catch (e) {
-            console.error('Ошибка загрузки целей:', e);
-        }
-
-        // --- 2. Загрузка транзакций (последние 2) ---
-        try {
-            const txRes = await fetch('/api/transactions/');
-            if (txRes.ok) {
-                const data = await txRes.json();
-                const transactions = Array.isArray(data) ? data : (data.results || []);
-                
-                const txContainer = document.getElementById('dashboard-transactions-container');
-                txContainer.innerHTML = '';
-
-                if (transactions.length === 0) {
-                    txContainer.innerHTML = '<div class="text-muted small">Нет недавних транзакций.</div>';
-                } else {
-                    // ИСПРАВЛЕНО: берем только 2 последних
-                    transactions.slice(0, 2).forEach(tx => {
-                        const isIncome = tx.type === 'IN';
-                        const amountColor = isIncome ? 'text-success' : 'text-dark';
-                        const sign = isIncome ? '+' : '-';
-                        
-                        txContainer.insertAdjacentHTML('beforeend', `
-                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                <div>
-                                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">${tx.category_name || tx.description || 'Транзакция'}</div>
-                                    <div class="text-muted" style="font-size: 0.75rem;">${new Date(tx.date).toLocaleDateString('ru-RU')}</div>
-                                </div>
-                                <div class="fw-bold ${amountColor}" style="font-size: 0.95rem;">
-                                    ${sign} ${Number(tx.amount).toLocaleString('ru-RU')} ₽
-                                </div>
-                            </div>
-                        `);
-                    });
-                    
-                    if(txContainer.lastElementChild) {
-                        txContainer.lastElementChild.classList.remove('border-bottom');
-                    }
-                }
-            }
-        } catch (e) {
-            console.error('Ошибка загрузки транзакций:', e);
-        }
-    }
-
-    // Запускаем при загрузке страницы
-    document.addEventListener('DOMContentLoaded', () => {
-        loadDashboardSummary();
+        loadDashboardSummary(); 
     });
 </script>
 {% endblock %}
