@@ -1,7 +1,9 @@
-Django==6.0.5
+Django==5.2.6
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
 django-filter==25.2
 drf-spectacular==0.27.2
 pywebview==6.2.1
 python-dateutil==2.9.0
+gunicorn==26.0.0
+whitenoise==6.12.0

@@ -14,20 +14,47 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.urls import re_path
 from django.views.generic import TemplateView
 from django.contrib import admin
 from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
+
+
+class SwaggerView(SpectacularSwaggerView):
+    swagger_ui_settings = {
+        "requestInterceptor": """
+        (request) => {
+            const m = document.cookie.match(/(^|; )csrftoken=([^;]+)/);
+            if (m) request.headers["X-CSRFToken"] = decodeURIComponent(m[2]);
+            return request;
+        }
+        """,
+    }
+
 
 urlpatterns = [
-    path('admin/', admin.site.get_admin_urls() if hasattr(admin.site, 'get_admin_urls') else admin.site.urls),
-    path('', include('tracker_app.urls')), 
-    
-    path('api/', include('api.urls')),
-    path('api-auth/', include('rest_framework.urls')),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/',SpectacularSwaggerView.as_view(url_name='schema'),name='swagger-ui',),
-    path('api/redoc/',SpectacularRedocView.as_view(url_name='schema'),name='redoc',),
-
+    path(
+        "admin/",
+        (
+            admin.site.get_admin_urls()
+            if hasattr(admin.site, "get_admin_urls")
+            else admin.site.urls
+        ),
+    ),
+    path("", include("tracker_app.urls")),
+    path("api/", include("api.urls")),
+    path("api-auth/", include("rest_framework.urls")),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path(
+        "api/redoc/",
+        SpectacularRedocView.as_view(url_name="schema"),
+        name="redoc",
+    ),
 ]
